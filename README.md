@@ -1,13 +1,16 @@
-## Instrucciones para el desarrollo del lado frontend (React + Vite).
+## Configuración del entorno de Desarrollo Frontend con React + Vite.
 
-### - Clonar el proyecto localmente:
+### 1. Clona el repositorio desde GitHub:
 `git clone <URL del repositorio>`
 
-### - Instalar Node.js, la versión utilizada al momento es: 
+### 2. Navega al directorio del proyecto:
+`cd Skillemp`
+
+### 3. Instala Node.js, la versión utilizada al momento es: 
 `v22.16.0 (LTS)`
 
-### - Instalar las dependencias:
+### - Instala las dependencias:
 `npm install`
 
-### - Inicia el servidor de desarrollo Vite:
+### - Inicia el servidor de desarrollo de Vite:
 `npm run dev`
