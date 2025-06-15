@@ -4,7 +4,7 @@
 `v22.16.0 (LTS)`
 
 #### 2. Clona el repositorio desde GitHub:
-`git clone <URL del repositorio>`
+`git clone https://github.com/octavio5545/skill-link-emprendedor`
 
 #### 3. Navega al directorio del proyecto:
 `cd Skillemp`
