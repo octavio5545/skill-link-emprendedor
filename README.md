@@ -1,9 +1,13 @@
-## Despúes de clonar el proyecto a tu entorno local. El desarrollo del lado frontend (React + Vite) requiere:
+## Instrucciones para el desarrollo del lado frontend (React + Vite).
 
-### Tener instalado Node.js, la versión utilizada al momento es: v22.16.0 (LTS)
+### - Clonar el proyecto localmente:
+`git clone <URL del repositorio>`
 
-### Instalar las dependencias. Desde tu CLI:
+### - Instalar Node.js, la versión utilizada al momento es: 
+`v22.16.0 (LTS)`
+
+### - Instalar las dependencias:
 `npm install`
 
-### Iniciar el servidor de desarrollo Vite. Desde tu CLI:
+### - Inicia el servidor de desarrollo Vite:
 `npm run dev`
