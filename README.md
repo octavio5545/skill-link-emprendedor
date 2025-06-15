@@ -1,6 +1,6 @@
-## Requisitos para instalar el proyecto (React + Vite) localmente:
+## Despúes de clonar el proyecto localmente. Para un desarrollo frontend (React + Vite) requiere:
 
-### Instalar Node.js (versión utilizada al momento):
+### Tener instalado Node.js (versión utilizada al momento):
 - v22.16.0 (LTS)
 
 ### Instalar dependencias:
