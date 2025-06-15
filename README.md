@@ -6,11 +6,11 @@
 ### 2. Navega al directorio del proyecto:
 `cd Skillemp`
 
-### 3. Instala Node.js, la versión utilizada al momento es: 
+### 3. Instala `Node.js` la versión utilizada al momento es: 
 `v22.16.0 (LTS)`
 
-### - Instala las dependencias:
+### 4. Instala las dependencias:
 `npm install`
 
-### - Inicia el servidor de desarrollo de Vite:
+### 5. Inicia el servidor de desarrollo de Vite:
 `npm run dev`
