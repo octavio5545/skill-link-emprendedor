@@ -6,10 +6,11 @@ interface Props {
     userIcon: string;
     links: { label: string, url: string; onClick?: () => void }[];
     isLoggedIn: boolean;
+    onLogin?: () => void;
 }
 
 /** Muestra el menú desplegable y define estado de los clics. */
-const NavBar = ({ userIcon, links, isLoggedIn }: Props) => {
+const NavBar = ({ userIcon, links, isLoggedIn, onLogin }: Props) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const isOpenRef = useRef(isOpen);
@@ -44,11 +45,14 @@ const NavBar = ({ userIcon, links, isLoggedIn }: Props) => {
 
     return (
         <nav className="navbar">
-            <h1 className="navbar-title">Logo</h1>
+            <section className="navbar-wrapper">
+                <h1 className="navbar-title">SkillLink</h1>
+                <h2 className="navbar-subtitle">Emprendedor</h2>
+            </section>
             <div className="menu" ref={menuRef}>
                 {!isLoggedIn && (
                     <>
-                        <button className="menu-session">Iniciar Sesión</button>
+                        <button className="menu-session" onClick={onLogin}>Iniciar Sesión</button>
                         <button className="menu-register">Regístrate</button>
                     </>
                 )}

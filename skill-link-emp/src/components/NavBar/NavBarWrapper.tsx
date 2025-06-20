@@ -1,27 +1,38 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import NavBar from './NavBar';
 import userImg from '../../assets/userIcon.png';
 
 const NavBarWrapper = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const navigate = useNavigate();
 
-  const navLinks = [
-    { label: "Dashboard", url: "/dashboard" },
-    { label: "Cerrar Sesión", url: "/", onClick: () => setIsLoggedIn(false) },
-  ];
+    const navLinks = [
+        {
+            label: "Dashboard",
+            url: "/dashboard"
+        },
+        {
+            label: "Cerrar Sesión",
+            url: "/", onClick: () => setIsLoggedIn(false)
+        },
+    ];
 
-  return (
-    <>
-      <NavBar userIcon={userImg} links={navLinks} isLoggedIn={isLoggedIn} />
+    const handleLogin = () => {
+        setIsLoggedIn(true);
+        navigate('/dashboard');
+    };
 
-      {/* Botón temporal para simular login/logout */}
-      <div style={{ padding: '2rem' }}>
-        <button onClick={() => setIsLoggedIn(prev => !prev)}>
-          {isLoggedIn ? "Cerrar sesión" : "Iniciar sesión"}
-        </button>
-      </div>
-    </>
-  );
+    return (
+        <>
+            <NavBar
+                userIcon={userImg}
+                links={navLinks}
+                isLoggedIn={isLoggedIn}
+                onLogin={handleLogin} 
+            />
+        </>
+    );
 };
 
 export default NavBarWrapper;
