@@ -1,4 +1,5 @@
 import { Mentorship, Project, Session, Notification } from '../types';
+import { IPost } from '../types/IPost';
 
 export const mockMentorships: Mentorship[] = [
   {
@@ -118,5 +119,68 @@ export const mockNotifications: Notification[] = [
     message: 'Recordatorio: Reunión en 30 minutos',
     time: '30 min',
     read: true
+  }
+];
+
+export const mockPosts: IPost[] = [
+  {
+    id: '1',
+    title: 'Cómo construir un MVP en 30 días',
+    image: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop',
+    description: 'Comparto mi experiencia construyendo un MVP para mi startup de fintech. Los desafíos, aprendizajes y herramientas que me ayudaron a lanzar en tiempo récord.',
+    author: 'María González',
+    authorRole: 'Fundadora de FinTechPro',
+    authorImage: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+    date: '2025-01-15',
+    likes: 124,
+    comments: 18
+  },
+  {
+    id: '2',
+    title: 'Lecciones aprendidas de mi primer pitch a inversores',
+    image: 'https://images.pexels.com/photos/3183153/pexels-photo-3183153.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop',
+    description: 'Después de presentar mi startup a 15 inversores, aquí están las 5 lecciones más importantes que aprendí sobre cómo preparar y ejecutar un pitch exitoso.',
+    author: 'Carlos Mendoza',
+    authorRole: 'CEO de EcoSolutions',
+    authorImage: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+    date: '2025-01-14',
+    likes: 89,
+    comments: 12
+  },
+  {
+    id: '3',
+    title: 'Herramientas gratuitas para emprendedores',
+    image: 'https://images.pexels.com/photos/3183156/pexels-photo-3183156.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop',
+    description: 'Una lista completa de herramientas gratuitas que uso diariamente para gestionar mi startup. Desde gestión de proyectos hasta marketing digital.',
+    author: 'Ana Rodríguez',
+    authorRole: 'Mentora de Startups',
+    authorImage: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+    date: '2025-01-13',
+    likes: 156,
+    comments: 23
+  },
+  {
+    id: '4',
+    title: 'Cómo validar tu idea de negocio sin gastar dinero',
+    image: 'https://images.pexels.com/photos/3183159/pexels-photo-3183159.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop',
+    description: 'Estrategias probadas para validar tu idea de negocio antes de invertir tiempo y dinero. Métodos que he usado personalmente con éxito.',
+    author: 'Luis Fernández',
+    authorRole: 'Consultor de Innovación',
+    authorImage: 'https://images.pexels.com/photos/1181424/pexels-photo-1181424.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+    date: '2025-01-12',
+    likes: 203,
+    comments: 31
+  },
+  {
+    id: '5',
+    title: 'Construyendo un equipo remoto efectivo',
+    image: 'https://images.pexels.com/photos/3183162/pexels-photo-3183162.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop',
+    description: 'Mi experiencia liderando un equipo de 8 personas en 4 países diferentes. Las mejores prácticas para comunicación, productividad y cultura de equipo.',
+    author: 'Sofia Chen',
+    authorRole: 'CTO de TechStart',
+    authorImage: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+    date: '2025-01-11',
+    likes: 167,
+    comments: 19
   }
 ];
