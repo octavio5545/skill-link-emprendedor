@@ -1,36 +1,38 @@
-import React, { useState } from 'react';
+import { MentorDashboard } from './components/MentorDashboard';
+import { EntrepreneurDashboard } from './components/EntrepreneurDashboard';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+import { useState } from 'react';
 import NavBar from './components/NavBar/NavBar';
 import userImg from './assets/userIcon.png';
 import './App.css'
 
-/* Este es el ejemplo original de cómo se podría estructurar el componente App en React.
 function App() {
-*/
-
-const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const navLinks = [
-    { label: "Inicio", url: "#" },
-    { label: "Perfil", url: "#" },
-    { label: "Servicios", url: "#" },
-    { label: "Cerrar Sesión", url: "#" },
+    { label: "Dashboard", url: "/dashboard" },
+    { label: "Cerrar Sesión", url: "/", onClick: () => setIsLoggedIn(false) },
   ];
 
   return (
-    <>
-      <div>
-        <NavBar userIcon={userImg} links={navLinks} isLoggedIn={isLoggedIn} />
-      </div>
+    <Router>
+      <NavBar userIcon={userImg} links={navLinks} isLoggedIn={isLoggedIn} />
 
-      {/* Botón para simular iniciar/cerrar sesión */}
+      {/* Mock para simular iniciar/cerrar sesión */}
       <div style={{ padding: '2rem' }}>
         <button onClick={() => setIsLoggedIn(prev => !prev)}>
           {isLoggedIn ? "Cerrar sesión" : "Iniciar sesión"}
         </button>
       </div>
-    </>
+
+      <Routes>
+        <Route path="/" element={<div>Home Page</div>} />
+        <Route path="/dashboard" element={<EntrepreneurDashboard />} />
+        <Route path="/mentor-dashboard" element={<MentorDashboard />} />
+      </Routes>
+    </Router>
   );
-};
+}
 
 export default App;
