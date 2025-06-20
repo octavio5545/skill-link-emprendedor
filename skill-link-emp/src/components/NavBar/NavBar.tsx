@@ -1,14 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import './NavBar.css';
 
 interface Props {
     userIcon: string;
-    links: { label: string, url: string }[];
+    links: { label: string, url: string; onClick?: () => void }[];
     isLoggedIn: boolean;
 }
 
 /** Muestra el menú desplegable y define estado de los clics. */
-const NavBar: React.FC<Props> = ({ userIcon, links, isLoggedIn }): React.ReactElement => {
+const NavBar = ({ userIcon, links, isLoggedIn }: Props) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const isOpenRef = useRef(isOpen);
@@ -61,7 +62,7 @@ const NavBar: React.FC<Props> = ({ userIcon, links, isLoggedIn }): React.ReactEl
                     <ul className="dropdown-menu">
                         {links.map((link, index) => (
                             <li key={index}>
-                                <a href={link.url}>{link.label}</a>
+                                <Link to={link.url} onClick={link.onClick}>{link.label}</Link>
                             </li>
                         ))}
                     </ul>
