@@ -1,4 +1,5 @@
-FROM maven:3.9.6-openjdk-23-slim
+# Usar imagen base de Java 23
+FROM openjdk:23-jdk-slim
 
 WORKDIR /app
 
