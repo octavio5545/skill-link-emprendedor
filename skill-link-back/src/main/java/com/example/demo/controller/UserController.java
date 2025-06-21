@@ -23,6 +23,7 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserRegisterRequest userRegisterRequest){
         try{
+            System.out.println("Hola soy Andy");
             if(userRegisterRequest.role().equals("ADMIN")) {
                 return ResponseEntity.badRequest().body("No se puede registrar un usuario con el rol ADMIN directamente. Use el endpoint de administración.");
             }
