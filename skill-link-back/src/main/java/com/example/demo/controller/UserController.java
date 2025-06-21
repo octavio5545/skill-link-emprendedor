@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.data.UserRegisterRequest;
+import com.example.demo.data.UserResponse;
 import com.example.demo.infra.security.TokenService;
 import com.example.demo.model.User;
 import com.example.demo.service.UserService;
@@ -28,6 +29,7 @@ public class UserController {
                 return ResponseEntity.badRequest().body("No se puede registrar un usuario con el rol ADMIN directamente. Use el endpoint de administración.");
             }
             User user = userService.register(userRegisterRequest);
+            UserResponse userResponse = new UserResponse(user.getId(), user.getName(), user.getSecondName(), user.getEmail(), user.getRole());
             String jwtToken = tokenService.generateToken(user);
             Map<String, Object> response = Map.of(
                 "token", jwtToken,
