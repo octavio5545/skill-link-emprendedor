@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import './NavBar.css';
 
 interface Props {
     userIcon: string;
-    links: { label: string, url: string }[];
+    links: { label: string, url: string; onClick?: () => void }[];
     isLoggedIn: boolean;
+    onLogin?: () => void;
 }
 
 /** Muestra el menú desplegable y define estado de los clics. */
-const NavBar: React.FC<Props> = ({ userIcon, links, isLoggedIn }): React.ReactElement => {
+const NavBar = ({ userIcon, links, isLoggedIn, onLogin }: Props) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const isOpenRef = useRef(isOpen);
@@ -43,11 +45,14 @@ const NavBar: React.FC<Props> = ({ userIcon, links, isLoggedIn }): React.ReactEl
 
     return (
         <nav className="navbar">
-            <h1 className="navbar-title">Logo</h1>
+            <section className="navbar-wrapper">
+                <h1 className="navbar-title">SkillLink</h1>
+                <h2 className="navbar-subtitle">Emprendedor</h2>
+            </section>
             <div className="menu" ref={menuRef}>
                 {!isLoggedIn && (
                     <>
-                        <button className="menu-session">Iniciar Sesión</button>
+                        <button className="menu-session" onClick={onLogin}>Iniciar Sesión</button>
                         <button className="menu-register">Regístrate</button>
                     </>
                 )}
@@ -61,7 +66,7 @@ const NavBar: React.FC<Props> = ({ userIcon, links, isLoggedIn }): React.ReactEl
                     <ul className="dropdown-menu">
                         {links.map((link, index) => (
                             <li key={index}>
-                                <a href={link.url}>{link.label}</a>
+                                <Link to={link.url} onClick={link.onClick}>{link.label}</Link>
                             </li>
                         ))}
                     </ul>
