@@ -1,3 +1,4 @@
+import { Lightbulb } from 'lucide-react';
 import './Footer.css';
 
 const Footer = () => {
@@ -5,7 +6,10 @@ const Footer = () => {
         <footer className="footer">
             <div className="footer-content">
                 <div className="footer-brand">
-                    <h3>SkillLink</h3>
+                    <div className="footer-brand__container">
+                        <Lightbulb className="footer-icon" />
+                        <h3>SkillLink</h3>
+                    </div>
                     <p>Conectando talento con oportunidades.</p>
                 </div>
                 <div className="footer-links">

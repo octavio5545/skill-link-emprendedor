@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { Lightbulb } from 'lucide-react';
 import './NavBar.css';
 
 interface Props {
@@ -43,12 +44,25 @@ const NavBar = ({ userIcon, links, isLoggedIn, onLogin }: Props) => {
         setIsOpen((prev) => !prev);
     };
 
+      /** Cierra el menú y ejecuta la acción adicional si existe */
+    const handleMenuItemClick = (onClick?: () => void) => {
+        if (onClick) onClick();
+        setIsOpen(false);
+    };
+
     return (
         <nav className="navbar">
-            <section className="navbar-wrapper">
-                <h1 className="navbar-title">SkillLink</h1>
-                <h2 className="navbar-subtitle">Emprendedor</h2>
-            </section>
+            <Link to="/home">
+                <section className="navbar-wrapper">
+                    <div className="navbar-logo__container">
+                        <Lightbulb />
+                    </div>
+                    <div className='navbar-title__container'>
+                        <h1 className="navbar-title">SkillLink</h1>
+                        <h2 className="navbar-subtitle">Emprendedor</h2>
+                    </div>
+                </section>
+            </Link>
             <div className="menu" ref={menuRef}>
                 {!isLoggedIn && (
                     <>
@@ -66,7 +80,12 @@ const NavBar = ({ userIcon, links, isLoggedIn, onLogin }: Props) => {
                     <ul className="dropdown-menu">
                         {links.map((link, index) => (
                             <li key={index}>
-                                <Link to={link.url} onClick={link.onClick}>{link.label}</Link>
+                                <Link
+                                    to={link.url}
+                                    onClick={() => handleMenuItemClick(link.onClick)}
+                                >
+                                    {link.label}
+                                </Link>
                             </li>
                         ))}
                     </ul>

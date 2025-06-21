@@ -9,6 +9,10 @@ const NavBarWrapper = () => {
 
     const navLinks = [
         {
+            label: "Inicio",
+            url: "/home"
+        },
+        {
             label: "Dashboard",
             url: "/dashboard"
         },
@@ -29,7 +33,7 @@ const NavBarWrapper = () => {
                 userIcon={userImg}
                 links={navLinks}
                 isLoggedIn={isLoggedIn}
-                onLogin={handleLogin} 
+                onLogin={handleLogin}
             />
         </>
     );
