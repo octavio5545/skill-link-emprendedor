@@ -172,7 +172,6 @@ export const useAuthTransition = () => {
                 }
             }
         } catch (error: any) {
-            console.error('Error en el envío del formulario:', error);
             setApiMessage(error.message || 'Ocurrió un error inesperado. Inténtalo de nuevo.');
             setIsError(true);
         } finally {
