@@ -9,4 +9,5 @@ export interface IPost {
   date: string;
   likes: number;
   comments: number;
+  tags: string[];
 }

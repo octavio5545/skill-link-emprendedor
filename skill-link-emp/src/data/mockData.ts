@@ -133,7 +133,8 @@ export const mockPosts: IPost[] = [
     authorImage: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
     date: '2025-01-15',
     likes: 124,
-    comments: 18
+    comments: 18,
+    tags: ['startup', 'validación', 'negocio']
   },
   {
     id: '2',
@@ -145,7 +146,8 @@ export const mockPosts: IPost[] = [
     authorImage: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
     date: '2025-01-14',
     likes: 89,
-    comments: 12
+    comments: 12,
+    tags: ['startup', 'validación', 'negocio']
   },
   {
     id: '3',
@@ -157,7 +159,8 @@ export const mockPosts: IPost[] = [
     authorImage: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
     date: '2025-01-13',
     likes: 156,
-    comments: 23
+    comments: 23,
+    tags: ['startup', 'validación', 'negocio']
   },
   {
     id: '4',
@@ -169,7 +172,8 @@ export const mockPosts: IPost[] = [
     authorImage: 'https://images.pexels.com/photos/1181424/pexels-photo-1181424.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
     date: '2025-01-12',
     likes: 203,
-    comments: 31
+    comments: 31,
+    tags: ['startup', 'validación', 'negocio']
   },
   {
     id: '5',
@@ -181,6 +185,7 @@ export const mockPosts: IPost[] = [
     authorImage: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
     date: '2025-01-11',
     likes: 167,
-    comments: 19
+    comments: 19,
+    tags: ['equipo', 'remoto', 'productividad']
   }
 ];
