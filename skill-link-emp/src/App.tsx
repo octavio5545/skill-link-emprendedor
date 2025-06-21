@@ -6,6 +6,7 @@ import { ResetPasswordPage } from './components/Login/pages/ResetPasswordPage.ts
 import NavBarWrapper from './components/NavBar/NavBarWrapper';
 
 import './App.css'
+import Footer from './components/Footer/Footer.tsx';
 
 function App() {
 
@@ -18,6 +19,7 @@ function App() {
         <Route path="/dashboard" element={<EntrepreneurDashboard />} />
         <Route path="/mentor-dashboard" element={<MentorDashboard />} />
       </Routes>
+      <Footer />
     </Router>
   );
 }
