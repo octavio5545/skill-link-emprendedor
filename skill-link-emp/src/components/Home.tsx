@@ -78,14 +78,13 @@ export const Home = ()=>{
   };
   return(
     <main className="min-h-screen bg-gradient-to-br from-emerald-500 via-teal-600 to-purple-700  px-20 py-8">
-      <div className="sticky top-16 z-30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="flex flex-col gap-4 items-center">
+        <div className="w-4/5 px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex-1 max-w-2xl">
               <SearchBar
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
-                
               />
             </div>
 
@@ -113,7 +112,7 @@ export const Home = ()=>{
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <aside className="lg:col-span-1">
-            <div className="sticky top-32 space-y-6">
+            <div className=" space-y-6">
               {/* Stats Card */}
               <ProfileCard />
 
