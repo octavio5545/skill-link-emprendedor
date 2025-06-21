@@ -5,9 +5,9 @@ import { Home } from './components/Home';
 import { Login } from './components/Login/Login';
 import { ResetPasswordPage } from './components/Login/pages/ResetPasswordPage.tsx'
 import NavBarWrapper from './components/NavBar/NavBarWrapper';
-
-import './App.css'
 import Footer from './components/Footer/Footer.tsx';
+import './App.css'
+
 
 function App() {
 
