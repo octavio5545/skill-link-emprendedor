@@ -1,4 +1,6 @@
-package com.example.demo.data;
+package com.example.demo.User.dto;
+
+import com.example.demo.common.Role;
 
 public record UserRegisterRequest(
         String name,

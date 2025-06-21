@@ -1,7 +1,7 @@
-package com.example.demo.model;
+package com.example.demo.User;
 
-import com.example.demo.data.Role;
-import com.example.demo.data.UserRegisterRequest;
+import com.example.demo.common.Role;
+import com.example.demo.User.dto.UserRegisterRequest;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.security.core.GrantedAuthority;

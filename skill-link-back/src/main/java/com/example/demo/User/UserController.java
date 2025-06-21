@@ -1,10 +1,8 @@
-package com.example.demo.controller;
+package com.example.demo.User;
 
-import com.example.demo.data.UserRegisterRequest;
-import com.example.demo.data.UserResponse;
+import com.example.demo.User.dto.UserRegisterRequest;
+import com.example.demo.User.dto.UserResponse;
 import com.example.demo.infra.security.TokenService;
-import com.example.demo.model.User;
-import com.example.demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +31,7 @@ public class UserController {
             String jwtToken = tokenService.generateToken(user);
             Map<String, Object> response = Map.of(
                 "token", jwtToken,
-                "user", user
+                "user", userResponse
             );
             return ResponseEntity.ok(response);
         }catch (Exception e) {
