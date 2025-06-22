@@ -1,10 +1,10 @@
-// java
 package com.example.demo;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+// importaciones relacionadas con .env que podrías eliminar si no vas a usarlo
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -14,14 +14,14 @@ public class DemoApplication {
 
 	public static void main(String[] args) {
 
-		loadEnvironmentVariables();
+		// loadEnvironmentVariables();
 
 		SpringApplication.run(DemoApplication.class, args);
 	}
 
+	/*
 	private static void loadEnvironmentVariables(){
 		try{
-
 			Dotenv dotenv = Dotenv.configure()
 					.directory(System.getProperty("user.dir"))
 					.filename(".env")
@@ -40,9 +40,9 @@ public class DemoApplication {
 				}
 			}
 
-
-		}catch (Exception e) {
+		} catch (Exception e) {
 			System.err.println("Error al cargar las variables de entorno: " + e.getMessage());
 		}
 	}
+	*/
 }
