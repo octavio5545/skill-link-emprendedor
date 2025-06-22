@@ -1,25 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Shield, Users, ChevronRight } from 'lucide-react';
 import { 
-  Gamepad2, 
-  Leaf, 
-  Trophy, 
-  Atom, 
+  Code, 
   DollarSign, 
+  Palette, 
   GraduationCap,
+  Globe,
   Heart,
-  Palette,
-  HandHeart,
-  TrendingUp,
-  Code,
+  Trophy,
+  Leaf,
   Brain,
-  Blocks,
-  ShoppingCart,
-  MapPin,
-  ChefHat,
-  Shirt,
-  Music,
-  Sprout
+  Gamepad2
 } from 'lucide-react';
 import type { UserRole, UserInterest } from '../types/auth';
 
@@ -54,14 +45,14 @@ export const UnifiedModal: React.FC<UnifiedModalProps> = ({
 
   const roles = [
     {
-      value: 'mentor' as UserRole,
+      value: 'Mentor' as UserRole,
       label: 'Mentor',
       description: 'Guía y facilita la comunidad',
       icon: Shield,
       gradient: 'from-purple-500 to-indigo-600'
     },
     {
-      value: 'colaborador' as UserRole,
+      value: 'Colaborador' as UserRole,
       label: 'Colaborador',
       description: 'Participa activamente en proyectos',
       icon: Users,
@@ -70,25 +61,16 @@ export const UnifiedModal: React.FC<UnifiedModalProps> = ({
   ];
 
   const interests = [
-    { value: 'videojuegos' as UserInterest, label: 'Videojuegos', icon: Gamepad2, color: 'from-purple-500 to-pink-500' },
-    { value: 'ambiental' as UserInterest, label: 'Ambiental', icon: Leaf, color: 'from-green-500 to-emerald-500' },
-    { value: 'deportes' as UserInterest, label: 'Deportes', icon: Trophy, color: 'from-orange-500 to-red-500' },
-    { value: 'ciencia-tecnologia' as UserInterest, label: 'Ciencia & Tech', icon: Atom, color: 'from-blue-500 to-cyan-500' },
-    { value: 'finanzas' as UserInterest, label: 'Finanzas', icon: DollarSign, color: 'from-yellow-500 to-orange-500' },
-    { value: 'educacion' as UserInterest, label: 'Educación', icon: GraduationCap, color: 'from-indigo-500 to-purple-500' },
-    { value: 'salud-bienestar' as UserInterest, label: 'Salud', icon: Heart, color: 'from-pink-500 to-rose-500' },
-    { value: 'arte-creatividad' as UserInterest, label: 'Arte', icon: Palette, color: 'from-violet-500 to-purple-500' },
-    { value: 'emprendimiento-social' as UserInterest, label: 'Social', icon: HandHeart, color: 'from-teal-500 to-cyan-500' },
-    { value: 'marketing-ventas' as UserInterest, label: 'Marketing', icon: TrendingUp, color: 'from-emerald-500 to-teal-500' },
-    { value: 'desarrollo-software' as UserInterest, label: 'Software', icon: Code, color: 'from-slate-500 to-gray-600' },
-    { value: 'inteligencia-artificial' as UserInterest, label: 'IA', icon: Brain, color: 'from-purple-600 to-indigo-600' },
-    { value: 'blockchain-crypto' as UserInterest, label: 'Blockchain', icon: Blocks, color: 'from-amber-500 to-yellow-500' },
-    { value: 'e-commerce' as UserInterest, label: 'E-commerce', icon: ShoppingCart, color: 'from-blue-600 to-indigo-600' },
-    { value: 'turismo-viajes' as UserInterest, label: 'Turismo', icon: MapPin, color: 'from-sky-500 to-blue-500' },
-    { value: 'gastronomia' as UserInterest, label: 'Gastronomía', icon: ChefHat, color: 'from-red-500 to-pink-500' },
-    { value: 'moda-diseno' as UserInterest, label: 'Moda', icon: Shirt, color: 'from-fuchsia-500 to-pink-500' },
-    { value: 'musica-entretenimiento' as UserInterest, label: 'Música', icon: Music, color: 'from-violet-600 to-purple-600' },
-    { value: 'agricultura-sostenible' as UserInterest, label: 'Agricultura', icon: Sprout, color: 'from-lime-500 to-green-500' }
+    { value: 'Tecnología' as UserInterest, label: 'Tecnología', icon: Code, color: 'from-blue-500 to-cyan-500' },
+    { value: 'Negocios y Emprendimiento' as UserInterest, label: 'Negocios', icon: DollarSign, color: 'from-yellow-500 to-orange-500' },
+    { value: 'Arte y Creatividad' as UserInterest, label: 'Arte', icon: Palette, color: 'from-violet-500 to-purple-500' },
+    { value: 'Ciencia y Educación' as UserInterest, label: 'Ciencia', icon: GraduationCap, color: 'from-indigo-500 to-purple-500' },
+    { value: 'Idiomas y Cultura' as UserInterest, label: 'Idiomas', icon: Globe, color: 'from-emerald-500 to-teal-500' },
+    { value: 'Salud y Bienestar' as UserInterest, label: 'Salud', icon: Heart, color: 'from-pink-500 to-rose-500' },
+    { value: 'Deportes' as UserInterest, label: 'Deportes', icon: Trophy, color: 'from-orange-500 to-red-500' },
+    { value: 'Medio ambiente y Sostenibilidad' as UserInterest, label: 'Ambiente', icon: Leaf, color: 'from-green-500 to-emerald-500' },
+    { value: 'Desarrollo Personal' as UserInterest, label: 'Desarrollo', icon: Brain, color: 'from-purple-600 to-indigo-600' },
+    { value: 'Video Juegos y Entretenimiento' as UserInterest, label: 'Gaming', icon: Gamepad2, color: 'from-purple-500 to-pink-500' }
   ];
 
   if (!isOpen) return null;
@@ -249,7 +231,7 @@ export const UnifiedModal: React.FC<UnifiedModalProps> = ({
               <button
                 onClick={handleClose}
                 disabled={!canProceed}
-                className={`flex-2 cursor-pointer font-semibold py-2.5 px-4 rounded-xl transition-all duration-300 transform hover:scale-[1.01] text-sm ${
+                className={`flex-1 cursor-pointer font-semibold py-2.5 px-4 rounded-xl transition-all duration-300 transform hover:scale-[1.01] text-sm ${
                   canProceed
                     ? 'bg-gradient-to-r from-cyan-600 to-emerald-600 text-white hover:from-cyan-700 hover:to-emerald-700'
                     : 'bg-white/10 text-white/50 cursor-not-allowed'

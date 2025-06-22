@@ -20,8 +20,8 @@ export const UnifiedSelector: React.FC<UnifiedSelectorProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const roleLabels: Record<UserRole, { label: string; icon: typeof Shield }> = {
-    'mentor': { label: 'Mentor', icon: Shield },
-    'colaborador': { label: 'Colaborador', icon: Users }
+    'Mentor': { label: 'Mentor', icon: Shield },
+    'Colaborador': { label: 'Colaborador', icon: Users }
   };
 
   const selectedRoleData = selectedRole ? roleLabels[selectedRole] : null;

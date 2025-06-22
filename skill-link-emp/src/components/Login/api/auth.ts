@@ -7,12 +7,11 @@ import type {
     ForgotPasswordResponse
 } from '../types/auth';
 
-const API_BASE_URL = 'http://localhost:8080/api';
-
+const API_BASE_URL = 'http://localhost:8080';
 
 export const registerUser = async (userData: RegisterRequest): Promise<RegisterResponse> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/users/register`, {
+        const response = await fetch(`${API_BASE_URL}/usuarios/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -24,14 +23,32 @@ export const registerUser = async (userData: RegisterRequest): Promise<RegisterR
             let errorMessage = 'Error desconocido al registrar el usuario.';
             try {
                 const errorBody = await response.json();
-                errorMessage = errorBody.message || errorBody.error || `Error ${response.status}: ${response.statusText}`;
+                errorMessage = errorBody.error || errorBody.message || `Error ${response.status}: ${response.statusText}`;
             } catch (jsonError) {
-                errorMessage = `Error ${response.status}: ${response.statusText}`;
+                // Si no hay JSON, usar mensaje basado en el código de estado
+                switch (response.status) {
+                    case 400:
+                        errorMessage = 'Datos de registro inválidos. Verifica la información ingresada.';
+                        break;
+                    case 409:
+                        errorMessage = 'El email ya está registrado. Intenta con otro email.';
+                        break;
+                    case 500:
+                        errorMessage = 'Error interno del servidor. Inténtalo de nuevo más tarde.';
+                        break;
+                    default:
+                        errorMessage = `Error ${response.status}: ${response.statusText}`;
+                }
             }
             throw new Error(errorMessage);
         }
 
         const data: RegisterResponse = await response.json();
+        
+        // Guardar token y datos del usuario automáticamente
+        sessionStorage.setItem('jwt_token', data.token);
+        sessionStorage.setItem('user_info', JSON.stringify(data.user));
+        
         return data;
     } catch (error) {
         console.error('Error en la llamada a la API de registro:', error);
@@ -41,7 +58,7 @@ export const registerUser = async (userData: RegisterRequest): Promise<RegisterR
 
 export const loginUser = async (credentials: LoginRequest): Promise<AuthResponse> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/users/login`, {
+        const response = await fetch(`${API_BASE_URL}/usuarios/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -53,20 +70,40 @@ export const loginUser = async (credentials: LoginRequest): Promise<AuthResponse
             let errorMessage = 'Error desconocido al iniciar sesión.';
             try {
                 const errorBody = await response.json();
-                errorMessage = errorBody.message || errorBody.error || `Error ${response.status}: ${response.statusText}`;
+                errorMessage = errorBody.error || errorBody.message || `Error ${response.status}: ${response.statusText}`;
             } catch (jsonError) {
-                errorMessage = `Error ${response.status}: ${response.statusText}`;
+                // Si no hay JSON, usar mensaje basado en el código de estado
+                switch (response.status) {
+                    case 401:
+                        errorMessage = 'Email o contraseña incorrectos. Verifica tus credenciales.';
+                        break;
+                    case 403:
+                        errorMessage = 'Acceso denegado. Tu cuenta puede estar desactivada.';
+                        break;
+                    case 404:
+                        errorMessage = 'Usuario no encontrado. Verifica tu email.';
+                        break;
+                    case 500:
+                        errorMessage = 'Error interno del servidor. Inténtalo de nuevo más tarde.';
+                        break;
+                    default:
+                        errorMessage = `Error de conexión. Código: ${response.status}`;
+                }
             }
             throw new Error(errorMessage);
         }
 
         const data: AuthResponse = await response.json();
 
+        // Guardar token y datos del usuario
         sessionStorage.setItem('jwt_token', data.token);
         sessionStorage.setItem('user_info', JSON.stringify({
             userId: data.userId,
+            name: data.name,
+            secondName: data.secondName,
             email: data.email,
-            role: data.role
+            role: data.role,
+            interests: data.interests
         }));
 
         return data;
@@ -82,7 +119,7 @@ export const forgotPassword = async (email: string): Promise<ForgotPasswordRespo
             correo: email
         };
 
-        const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        const response = await fetch(`${API_BASE_URL}/usuarios/recover-password`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -96,7 +133,16 @@ export const forgotPassword = async (email: string): Promise<ForgotPasswordRespo
                 const errorBody = await response.json();
                 errorMessage = errorBody.mensaje || errorBody.message || `Error ${response.status}: ${response.statusText}`;
             } catch (jsonError) {
-                errorMessage = `Error ${response.status}: ${response.statusText}`;
+                switch (response.status) {
+                    case 404:
+                        errorMessage = 'No se encontró una cuenta con ese email.';
+                        break;
+                    case 500:
+                        errorMessage = 'Error interno del servidor. Inténtalo de nuevo más tarde.';
+                        break;
+                    default:
+                        errorMessage = `Error ${response.status}: ${response.statusText}`;
+                }
             }
             throw new Error(errorMessage);
         }
@@ -111,7 +157,7 @@ export const forgotPassword = async (email: string): Promise<ForgotPasswordRespo
 
 export const validateResetToken = async (token: string): Promise<ForgotPasswordResponse> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/auth/validate-reset-token?token=${encodeURIComponent(token)}`, {
+        const response = await fetch(`${API_BASE_URL}/usuarios/validate-reset-token?token=${encodeURIComponent(token)}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -124,7 +170,7 @@ export const validateResetToken = async (token: string): Promise<ForgotPasswordR
                 const errorBody = await response.json();
                 errorMessage = errorBody.mensaje || errorBody.message || `Error ${response.status}: ${response.statusText}`;
             } catch (jsonError) {
-                errorMessage = `Error ${response.status}: ${response.statusText}`;
+                errorMessage = 'Token inválido o expirado.';
             }
             throw new Error(errorMessage);
         }
@@ -144,7 +190,7 @@ export const resetPassword = async (token: string, newPassword: string): Promise
             nuevaContra: newPassword
         };
 
-        const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        const response = await fetch(`${API_BASE_URL}/usuarios/reset-password`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -158,7 +204,7 @@ export const resetPassword = async (token: string, newPassword: string): Promise
                 const errorBody = await response.json();
                 errorMessage = errorBody.mensaje || errorBody.message || `Error ${response.status}: ${response.statusText}`;
             } catch (jsonError) {
-                errorMessage = `Error ${response.status}: ${response.statusText}`;
+                errorMessage = 'Error al cambiar la contraseña.';
             }
             throw new Error(errorMessage);
         }
@@ -197,7 +243,7 @@ export const fetchAuthenticated = async <T>(
             console.error('Token inválido, expirado o permisos insuficientes. Limpiando sesión...');
             sessionStorage.removeItem('jwt_token');
             sessionStorage.removeItem('user_info');
-            throw new Error('Authentication failed or token expired. Please log in again.');
+            throw new Error('Autenticación fallida. Por favor, inicia sesión de nuevo.');
         }
 
         let errorMessage = 'Error desconocido en petición autenticada.';
