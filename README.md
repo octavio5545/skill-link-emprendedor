@@ -7,7 +7,7 @@
 `git clone https://github.com/octavio5545/skill-link-emprendedor`
 
 #### 3. Navega al directorio del proyecto:
-`cd Skillemp`
+`cd skill-link-emp`
 
 #### 4. Instala las dependencias:
 `npm install`
