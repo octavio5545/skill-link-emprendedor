@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { IPost } from "../types/IPost";
 import { FilterTag } from "./Home/FilterTag";
 import { filterPosts, getAllTags } from "../utils/post";
+import { useNavigate } from "react-router-dom";
 
 
 export const Home = ()=>{
@@ -14,7 +15,7 @@ export const Home = ()=>{
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-
+  let router = useNavigate()
   const allTags = useMemo(() => getAllTags(posts), [posts]);
   
   const filteredPosts = useMemo(() => 
@@ -100,7 +101,7 @@ export const Home = ()=>{
                 <Filter className="h-5 w-5 text-white" />
               </button>
               
-              <button className="flex items-center space-x-2 bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors duration-200">
+              <button onClick={() => router('/add-post')} className="flex items-center space-x-2 bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors duration-200">
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">Publicar</span>
               </button>
