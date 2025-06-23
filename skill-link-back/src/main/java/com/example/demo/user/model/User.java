@@ -10,7 +10,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.List;
 
@@ -50,7 +51,7 @@ public class User implements UserDetails {
 
     @Column(name = "fecha_registro")
     @CreationTimestamp
-    private LocalDateTime registrationDate;
+    private OffsetDateTime registrationDate;
 
     public User() {}
 
@@ -61,7 +62,7 @@ public class User implements UserDetails {
         this.password = userRegisterRequest.password();
         this.role = userRegisterRequest.role();
         this.interests = userRegisterRequest.interests();
-        this.registrationDate = LocalDateTime.now();
+        this.registrationDate = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
     // Getters y Setters
@@ -130,11 +131,11 @@ public class User implements UserDetails {
         this.interests = interests;
     }
 
-    public LocalDateTime getRegistrationDate() {
+    public OffsetDateTime getRegistrationDate() {
         return registrationDate;
     }
 
-    public void setRegistrationDate(LocalDateTime registrationDate) {
+    public void setRegistrationDate(OffsetDateTime registrationDate) {
         this.registrationDate = registrationDate;
     }
 

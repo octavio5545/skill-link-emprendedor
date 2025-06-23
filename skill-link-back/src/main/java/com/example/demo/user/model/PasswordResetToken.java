@@ -1,7 +1,8 @@
 package com.example.demo.user.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "password_reset_tokens")
@@ -19,10 +20,10 @@ public class PasswordResetToken {
     private User usuario;
 
     @Column(nullable = false)
-    private LocalDateTime fechaCreacion;
+    private OffsetDateTime fechaCreacion;
 
     @Column(nullable = false)
-    private LocalDateTime fechaExpiracion;
+    private OffsetDateTime fechaExpiracion;
 
     @Column(nullable = false)
     private boolean usado = false;
@@ -30,7 +31,7 @@ public class PasswordResetToken {
     // Constructores
     public PasswordResetToken() {}
 
-    public PasswordResetToken(String token, User usuario, LocalDateTime fechaCreacion, LocalDateTime fechaExpiracion) {
+    public PasswordResetToken(String token, User usuario, OffsetDateTime fechaCreacion, OffsetDateTime fechaExpiracion) {
         this.token = token;
         this.usuario = usuario;
         this.fechaCreacion = fechaCreacion;
@@ -40,7 +41,7 @@ public class PasswordResetToken {
 
     // Métodos de utilidad
     public boolean isExpirado() {
-        return LocalDateTime.now().isAfter(this.fechaExpiracion);
+        return OffsetDateTime.now(ZoneOffset.UTC).isAfter(this.fechaExpiracion);
     }
 
     public boolean isValido() {
@@ -76,19 +77,19 @@ public class PasswordResetToken {
         this.usuario = usuario;
     }
 
-    public LocalDateTime getFechaCreacion() {
+    public OffsetDateTime getFechaCreacion() {
         return fechaCreacion;
     }
 
-    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+    public void setFechaCreacion(OffsetDateTime fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
     }
 
-    public LocalDateTime getFechaExpiracion() {
+    public OffsetDateTime getFechaExpiracion() {
         return fechaExpiracion;
     }
 
-    public void setFechaExpiracion(LocalDateTime fechaExpiracion) {
+    public void setFechaExpiracion(OffsetDateTime fechaExpiracion) {
         this.fechaExpiracion = fechaExpiracion;
     }
 
