@@ -1,4 +1,5 @@
-import { Lightbulb } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Lightbulb } from "lucide-react"
 import './Footer.css';
 
 const Footer = () => {
@@ -13,10 +14,8 @@ const Footer = () => {
                     <p>Conectando talento con oportunidades.</p>
                 </div>
                 <div className="footer-links">
-                    <a href="/about">Sobre Nosotros</a>
-                    <a href="/contact">Contacto</a>
-                    <a href="/privacy">Privacidad</a>
-                    <a href="/terms">Términos</a>
+                    <Link to="/">Inicio</Link>
+                    <Link to="/about">Sobre Nosotros</Link>
                 </div>
             </div>
             <div className="footer-bottom">
