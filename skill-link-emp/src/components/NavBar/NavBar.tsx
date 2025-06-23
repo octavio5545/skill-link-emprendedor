@@ -10,7 +10,7 @@ interface Props {
     onLogin?: () => void;
 }
 
-/** Muestra el menú desplegable y define estado de los clics. */
+// Muestra el menú desplegable y define estado de los clics.
 const NavBar = ({ userIcon, links, isLoggedIn, onLogin }: Props) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
