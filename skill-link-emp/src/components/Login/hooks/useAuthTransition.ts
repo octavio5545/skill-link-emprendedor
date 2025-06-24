@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { forgotPassword } from '../api/auth';
+import { forgotPassword, registerUser, loginUser } from '../api/auth';
 import type { AuthMode, FormData, UserRole, UserInterest } from '../types/auth';
 
 export const useAuthTransition = () => {
@@ -130,6 +130,17 @@ export const useAuthTransition = () => {
                     return;
                 }
 
+                // Llamar a la API real de registro
+                const registerData = {
+                    name: formData.firstName,
+                    secondName: formData.lastName,
+                    email: formData.email,
+                    password: formData.password,
+                    role: formData.role as UserRole,
+                    interests: formData.interests
+                };
+
+                
                 setApiMessage('¡Registro exitoso! Redirigiendo...');
                 setIsError(false);
                 resetForm();
@@ -139,6 +150,14 @@ export const useAuthTransition = () => {
                 }, 1500);
                 
             } else if (authMode === 'login') {
+                // Llamar a la API real de login
+                const loginData = {
+                    email: formData.email,
+                    password: formData.password
+                };
+
+                const response = await loginUser(loginData);
+                
                 setApiMessage('¡Inicio de sesión exitoso! Redirigiendo...');
                 setIsError(false);
                 resetForm();
@@ -164,6 +183,7 @@ export const useAuthTransition = () => {
                 }
             }
         } catch (error: any) {
+            console.error('Error en handleSubmit:', error);
             setApiMessage(error.message || 'Ocurrió un error inesperado. Inténtalo de nuevo.');
             setIsError(true);
         } finally {

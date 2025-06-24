@@ -7,25 +7,31 @@ import type {
     ForgotPasswordResponse
 } from '../types/auth';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://skill-link-emprendedor-pjof.onrender.com';
 
 export const registerUser = async (userData: RegisterRequest): Promise<RegisterResponse> => {
     try {
+        console.log('🚀 Enviando petición de registro a:', `${API_BASE_URL}/usuarios/register`);
+        
         const response = await fetch(`${API_BASE_URL}/usuarios/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify(userData),
         });
+
+        console.log('📡 Respuesta del servidor:', response.status, response.statusText);
 
         if (!response.ok) {
             let errorMessage = 'Error desconocido al registrar el usuario.';
             try {
                 const errorBody = await response.json();
+                console.error('❌ Error del servidor:', errorBody);
                 errorMessage = errorBody.error || errorBody.message || `Error ${response.status}: ${response.statusText}`;
             } catch (jsonError) {
-                // Si no hay JSON, usar mensaje basado en el código de estado
+                console.error('❌ Error parseando respuesta JSON:', jsonError);
                 switch (response.status) {
                     case 400:
                         errorMessage = 'Datos de registro inválidos. Verifica la información ingresada.';
@@ -44,6 +50,7 @@ export const registerUser = async (userData: RegisterRequest): Promise<RegisterR
         }
 
         const data: RegisterResponse = await response.json();
+        console.log('✅ Registro exitoso:', data);
         
         // Guardar token y datos del usuario automáticamente
         sessionStorage.setItem('jwt_token', data.token);
@@ -51,28 +58,34 @@ export const registerUser = async (userData: RegisterRequest): Promise<RegisterR
         
         return data;
     } catch (error) {
-        console.error('Error en la llamada a la API de registro:', error);
+        console.error('💥 Error en la llamada a la API de registro:', error);
         throw error;
     }
 };
 
 export const loginUser = async (credentials: LoginRequest): Promise<AuthResponse> => {
     try {
+        console.log('🚀 Enviando petición de login a:', `${API_BASE_URL}/usuarios/login`);
+        
         const response = await fetch(`${API_BASE_URL}/usuarios/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify(credentials),
         });
+
+        console.log('📡 Respuesta del servidor:', response.status, response.statusText);
 
         if (!response.ok) {
             let errorMessage = 'Error desconocido al iniciar sesión.';
             try {
                 const errorBody = await response.json();
+                console.error('❌ Error del servidor:', errorBody);
                 errorMessage = errorBody.error || errorBody.message || `Error ${response.status}: ${response.statusText}`;
             } catch (jsonError) {
-                // Si no hay JSON, usar mensaje basado en el código de estado
+                console.error('❌ Error parseando respuesta JSON:', jsonError);
                 switch (response.status) {
                     case 401:
                         errorMessage = 'Email o contraseña incorrectos. Verifica tus credenciales.';
@@ -94,6 +107,7 @@ export const loginUser = async (credentials: LoginRequest): Promise<AuthResponse
         }
 
         const data: AuthResponse = await response.json();
+        console.log('✅ Login exitoso:', data);
 
         // Guardar token y datos del usuario
         sessionStorage.setItem('jwt_token', data.token);
@@ -108,7 +122,7 @@ export const loginUser = async (credentials: LoginRequest): Promise<AuthResponse
 
         return data;
     } catch (error) {
-        console.error('Error en la llamada a la API de login:', error);
+        console.error('💥 Error en la llamada a la API de login:', error);
         throw error;
     }
 };
@@ -124,6 +138,7 @@ export const forgotPassword = async (email: string): Promise<ForgotPasswordRespo
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify(requestData),
         });
 
@@ -162,6 +177,7 @@ export const validateResetToken = async (token: string): Promise<ForgotPasswordR
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
         });
 
         if (!response.ok) {
@@ -195,6 +211,7 @@ export const resetPassword = async (token: string, newPassword: string): Promise
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify(requestData),
         });
 
@@ -236,6 +253,7 @@ export const fetchAuthenticated = async <T>(
     const response = await fetch(`${API_BASE_URL}${url}`, {
         ...options,
         headers,
+        credentials: 'include',
     });
 
     if (!response.ok) {
