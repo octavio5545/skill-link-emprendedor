@@ -1,14 +1,17 @@
-package com.example.demo.User;
+package com.example.demo.user.model;
 
 import com.example.demo.common.Role;
-import com.example.demo.User.dto.UserRegisterRequest;
+import com.example.demo.common.UserInterest;
+import com.example.demo.user.dto.UserRegisterRequest;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.List;
 
@@ -20,27 +23,35 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "nombre")
+    @Column(name = "nombre", nullable = false)
     private String name;
 
-    @Column(name = "apellido")
+    @Column(name = "apellido", nullable = false)
     private String secondName;
 
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(name = "contrasena")
+    @JsonIgnore
+    @Column(name = "contrasena", nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Role role;
 
     @Column(name = "activo")
     private boolean active = true;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "usuario_intereses", joinColumns = @JoinColumn(name = "usuario_id"))
+    @Column(name = "interes", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private List<UserInterest> interests;
+
     @Column(name = "fecha_registro")
     @CreationTimestamp
-    private LocalDateTime registrationDate;
-
+    private OffsetDateTime registrationDate;
 
     public User() {}
 
@@ -50,10 +61,11 @@ public class User implements UserDetails {
         this.email = userRegisterRequest.email();
         this.password = userRegisterRequest.password();
         this.role = userRegisterRequest.role();
-        this.active = true; // Default to active
-        this.registrationDate = LocalDateTime.now(); // Set registration date to now
+        this.interests = userRegisterRequest.interests();
+        this.registrationDate = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
+    // Getters y Setters
     public Long getId() {
         return id;
     }
@@ -111,14 +123,23 @@ public class User implements UserDetails {
         this.active = active;
     }
 
-    public LocalDateTime getRegistrationDate() {
+    public List<UserInterest> getInterests() {
+        return interests;
+    }
+
+    public void setInterests(List<UserInterest> interests) {
+        this.interests = interests;
+    }
+
+    public OffsetDateTime getRegistrationDate() {
         return registrationDate;
     }
 
-    public void setRegistrationDate(LocalDateTime registrationDate) {
+    public void setRegistrationDate(OffsetDateTime registrationDate) {
         this.registrationDate = registrationDate;
     }
 
+    // UserDetails implementation
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
@@ -148,5 +169,4 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return this.active;
     }
-
 }

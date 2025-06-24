@@ -1,7 +1,7 @@
 package com.example.demo.infra.security;
 
-import com.example.demo.User.User;
-import com.example.demo.User.UserRepository;
+import com.example.demo.user.model.User;
+import com.example.demo.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

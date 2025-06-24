@@ -1,4 +1,4 @@
-package com.example.demo.User.dto;
+package com.example.demo.user.dto;
 
 import com.example.demo.common.Role;
 
