@@ -7,6 +7,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class CorsConfig {
@@ -15,8 +16,15 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Permitir todos los orígenes
-        configuration.addAllowedOrigin("*");
+        // Permitir orígenes específicos (incluye localhost para desarrollo y tu dominio de producción)
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:*",
+                "https://localhost:*",
+                "https://*.netlify.app",
+                "https://*.vercel.app",
+                "https://*.onrender.com",
+                "https://skill-link-emprendedor-pjof.onrender.com"
+        ));
 
         // Métodos HTTP permitidos
         configuration.setAllowedMethods(Arrays.asList(
@@ -24,10 +32,21 @@ public class CorsConfig {
         ));
 
         // Headers permitidos
-        configuration.addAllowedHeader("*");
+        configuration.setAllowedHeaders(Arrays.asList("*"));
 
-        // NO permitir credenciales para evitar el error
-        configuration.setAllowCredentials(false);
+        // Headers expuestos
+        configuration.setExposedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"
+        ));
+
+        // PERMITIR credenciales (necesario para JWT)
+        configuration.setAllowCredentials(true);
 
         // Tiempo de cache para preflight requests
         configuration.setMaxAge(3600L);
