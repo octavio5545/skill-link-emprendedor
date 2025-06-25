@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Lightbulb, Users, Target, Calendar, Search, Plus } from 'lucide-react';
-import { StatsCard } from './StatsCard';
-import { ProjectCard } from './ProjectCard';
-import { Sidebar } from './Sidebar';
+import { StatsCard } from './Dashboard/StatsCard';
+import { ProjectCard } from './Dashboard/ProjectCard';
+import { Sidebar } from './Dashboard/Sidebar';
 import { mockProjects, mockSessions } from '../data/mockData';
 
 export const EntrepreneurDashboard: React.FC = () => {
