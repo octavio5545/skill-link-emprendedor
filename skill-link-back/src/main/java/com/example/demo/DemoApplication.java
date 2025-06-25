@@ -28,7 +28,7 @@ public class DemoApplication {
 					.ignoreIfMissing()
 					.load();
 
-			String[] allowedVariables = {"DB_PASSWORD_SKILL_LINK", "JWT_SECRET"};
+			String[] allowedVariables = {"DB_PASSWORD_SKILL_LINK", "JWT_SECRET", "GMAIL_USERNAME", "GMAIL_PASSWORD"};
 
 			for (String varName : allowedVariables) {
 				String value = dotenv.get(varName);

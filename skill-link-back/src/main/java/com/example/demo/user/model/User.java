@@ -49,7 +49,7 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private List<UserInterest> interests;
 
-    @Column(name = "fecha_registro")
+    @Column(name = "fecha_registro", columnDefinition = "datetime")
     @CreationTimestamp
     private OffsetDateTime registrationDate;
 

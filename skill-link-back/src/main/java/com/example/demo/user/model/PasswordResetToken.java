@@ -19,10 +19,10 @@ public class PasswordResetToken {
     @JoinColumn(name = "user_id", nullable = false)
     private User usuario;
 
-    @Column(nullable = false)
+    @Column(name = "fecha_creacion", nullable = false, columnDefinition = "datetime")
     private OffsetDateTime fechaCreacion;
 
-    @Column(nullable = false)
+    @Column(name = "fecha_expiracion", nullable = false, columnDefinition = "datetime")
     private OffsetDateTime fechaExpiracion;
 
     @Column(nullable = false)
