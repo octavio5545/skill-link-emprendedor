@@ -1,6 +1,6 @@
 import React from 'react';
 import { Users, Calendar, TrendingUp, MessageCircle } from 'lucide-react';
-import { Project } from '../types';
+import { Project } from '../../types';
 
 interface ProjectCardProps {
   project: Project;
