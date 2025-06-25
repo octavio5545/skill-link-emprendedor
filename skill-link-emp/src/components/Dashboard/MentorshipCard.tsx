@@ -1,6 +1,6 @@
 import React from 'react';
 import { Calendar, Clock, MessageCircle, Video } from 'lucide-react';
-import { Mentorship } from '../types';
+import { Mentorship } from '../../types';
 
 interface MentorshipCardProps {
   mentorship: Mentorship;

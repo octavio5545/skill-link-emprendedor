@@ -1,6 +1,6 @@
 import React from 'react';
 import { Calendar, Clock, Users, Award, BookOpen, Network } from 'lucide-react';
-import { Session } from '../types';
+import { Session } from '../../types';
 
 interface SidebarProps {
   role: 'mentor' | 'entrepreneur';
