@@ -26,7 +26,7 @@ public class Mentoria {
     private String description;
 
     @Column(name = "numero_personas_max")
-    private Integer maxPeople;
+    private Integer maxPersons;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mentor_id", nullable = false)
@@ -52,17 +52,17 @@ public class Mentoria {
     // Constructores
     public Mentoria() {}
 
-    public Mentoria(String title, String description, Integer maxPeople, User mentor, List<UserInterest> interests) {
+    public Mentoria(String title, String description, Integer maxPersons, User mentor, List<UserInterest> interests) {
         this.title = title;
         this.description = description;
-        this.maxPeople = maxPeople;
+        this.maxPersons = maxPersons;
         this.mentor = mentor;
         this.interests = interests;
     }
 
     // Métodos de utilidad
     public boolean hasAvailableSpace(){
-        return maxPeople == null || participants.size() < maxPeople;
+        return maxPersons == null || participants.size() < maxPersons;
     }
 
     public int getCurrentParticipants() {
@@ -110,12 +110,12 @@ public class Mentoria {
         this.description = description;
     }
 
-    public Integer getMaxPeople() {
-        return maxPeople;
+    public Integer getMaxPersons() {
+        return maxPersons;
     }
 
-    public void setMaxPeople(Integer maxPeople) {
-        this.maxPeople = maxPeople;
+    public void setMaxPeople(Integer maxPersons) {
+        this.maxPersons = maxPersons;
     }
 
     public User getMentor() {
