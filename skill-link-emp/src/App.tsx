@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { MentorDashboard } from './components/MentorDashboard';
 import { EntrepreneurDashboard } from './components/EntrepreneurDashboard';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -13,6 +14,9 @@ import './App.css'
 
 function App() {
 
+  const [selectedTag, setSelectedTag] = useState<string>('all');
+  const [currentUserId] = useState<string | null>('1');
+
   return (
     <Router>
       <div className='app-container'>
@@ -20,7 +24,8 @@ function App() {
         <main className='app-main-content'>
           <Routes>
             <Route path="/" element={<Login />} />
-            <Route path="/home" element={<Home />} />
+            <Route path="/home" element={<Home selectedTag={selectedTag}
+                                          currentUserId={currentUserId}/>} />
             <Route path="/about" element={<About />} />
             <Route path="/add-post" element={<AddPost />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />

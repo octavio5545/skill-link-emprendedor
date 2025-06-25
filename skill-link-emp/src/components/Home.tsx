@@ -1,5 +1,5 @@
 import { mockPosts } from "../data/mockData";
-import { PostCard } from "./Home/PostCard";
+import  PostCard  from "./Post/components/post/PostCard";
 import { ProfileCard } from "./Home/ProfileCard";
 import { Filter, Plus, Search, Tag, TrendingUp } from "lucide-react";
 import { SearchBar } from "./Home/SearchBar";
@@ -8,63 +8,30 @@ import { IPost } from "../types/IPost";
 import { FilterTag } from "./Home/FilterTag";
 import { filterPosts, getAllTags } from "../utils/post";
 import { useNavigate } from "react-router-dom";
+import { usePosts } from './Post/hooks/usePosts';
 
-
-export const Home = ()=>{
-  const [posts, setPosts] = useState<IPost[]>(mockPosts);
+export const Home = ({ selectedTag, currentUserId }) => {
+  const { 
+      posts, 
+      loading, 
+      error, 
+      fetchPosts, 
+      handleReaction, 
+      handleCommentReaction,
+      handleNewComment
+    } = usePosts({ currentUserId });
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   let router = useNavigate()
   const allTags = useMemo(() => getAllTags(posts), [posts]);
+
+  
   
   const filteredPosts = useMemo(() => 
     filterPosts(posts, searchTerm, selectedTags),
     [posts, searchTerm, selectedTags]
   );
-
-  const handleLike = (postId: string) => {
-    setPosts(prevPosts =>
-      prevPosts.map(post =>
-        post.id === postId
-          ? {
-              ...post,
-              isLiked: !post.likes,
-              likes: post.likes ? post.likes - 1 : post.likes + 1
-            }
-          : post
-      )
-    );
-  };
-
-  
-
-  // const handleComment = (postId: string, content: string) => {
-  //   const newComment = {
-  //     id: generateUniqueId(),
-  //     user: {
-  //       id: 'current-user',
-  //       name: 'Usuario Actual',
-  //       avatar: 'https://images.pexels.com/photos/1542085/pexels-photo-1542085.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-  //       title: 'Profesional',
-  //       company: 'Tu Empresa'
-  //     },
-  //     content,
-  //     timestamp: new Date(),
-  //     likes: 0
-  //   };
-
-  //   setPosts(prevPosts =>
-  //     prevPosts.map(post =>
-  //       post.id === postId
-  //         ? {
-  //             ...post,
-  //             comments: [...post.comments, newComment]
-  //           }
-  //         : post
-  //     )
-  //   );
-  // };
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags(prev =>
@@ -77,6 +44,7 @@ export const Home = ()=>{
   const handleClearFilters = () => {
     setSelectedTags([]);
   };
+
   return(
     <main className="min-h-screen bg-gradient-to-br from-emerald-500 via-teal-600 to-purple-700  py-8">
       <div className="flex flex-col gap-4 items-center">
@@ -172,19 +140,58 @@ export const Home = ()=>{
 
             {/* Posts */}
             <div className="space-y-6">
-              {filteredPosts.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <TrendingUp className="h-8 w-8 text-gray-400" />
+              {loading ? (
+                <div className="text-center py-16">
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <p className="text-white/80 font-medium">Cargando posts...</p>
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No hay publicaciones</h3>
-                  <p className="text-gray-600 max-w-sm mx-auto">
-                    No se encontraron publicaciones que coincidan con tus filtros de búsqueda.
+                </div>
+              ) : error ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <TrendingUp className="h-8 w-8 text-red-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-white mb-2">Error al cargar</h3>
+                  <p className="text-white/70 max-w-sm mx-auto mb-4">{error}</p>
+                  <button 
+                    onClick={fetchPosts} 
+                    className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200"
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              ) : filteredPosts.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4">
+                    <TrendingUp className="h-8 w-8 text-white/60" />
+                  </div>
+                  <h3 className="text-lg font-medium text-white mb-2">No hay publicaciones</h3>
+                  <p className="text-white/70 max-w-sm mx-auto">
+                    {searchTerm || selectedTags.length > 0 
+                      ? 'No se encontraron publicaciones que coincidan con tus filtros de búsqueda.'
+                      : 'Sé el primero en compartir algo increíble con la comunidad.'
+                    }
                   </p>
+                  {(!searchTerm && selectedTags.length === 0) && (
+                    <button 
+                      onClick={() => router('/add-post')} 
+                      className="mt-4 px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200"
+                    >
+                      Crear primer post
+                    </button>
+                  )}
                 </div>
               ) : (
                 filteredPosts.map((post) => (
-                  <PostCard key={post.id} post={post} />
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    currentUserId={currentUserId}
+                    onReaction={handleReaction}
+                    onCommentReaction={handleCommentReaction}
+                    onNewComment={handleNewComment}
+                  />
                 ))
               )}
             </div>
