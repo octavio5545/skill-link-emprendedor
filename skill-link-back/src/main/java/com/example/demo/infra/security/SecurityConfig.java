@@ -42,8 +42,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**")
                         .permitAll()
 
-                        // WEBSOCKET ENDPOINTS
-                        .requestMatchers("/ws/**", "/ws-sockjs/**")
+                        // WEBSOCKET ENDPOINTS - Crítico para producción
+                        .requestMatchers("/ws/**", "/ws-sockjs/**", "/app/**", "/topic/**", "/queue/**")
                         .permitAll()
 
                         // Endpoints públicos de autenticación
@@ -56,8 +56,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/usuarios/validate-reset-token")
                         .permitAll()
 
-                        // CHAT ENDPOINTS - Temporalmente públicos para debug
+                        // CHAT ENDPOINTS - Temporalmente públicos para pruebas
                         .requestMatchers("/api/conversaciones/**", "/api/mensajes/**")
+                        .permitAll()
+
+                        // Health check para Render
+                        .requestMatchers(HttpMethod.GET, "/actuator/health", "/health")
                         .permitAll()
 
                         // Todo lo demás requiere autenticación

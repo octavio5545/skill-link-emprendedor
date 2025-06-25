@@ -15,36 +15,38 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        // ✅ Broker simple SIN heartbeat para evitar el error
+        // Broker simple SIN heartbeat para evitar el error
         config.enableSimpleBroker("/topic", "/queue");
 
-        // ✅ Prefijo para destinos de aplicación
+        // Prefijo para destinos de aplicación
         config.setApplicationDestinationPrefixes("/app");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // ✅ ENDPOINT PRINCIPAL - WebSocket nativo
+        // ENDPOINT PRINCIPAL - WebSocket nativo
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns(
                         "http://localhost:*",
                         "https://localhost:*",
                         "http://127.0.0.1:*",
-                        "https://127.0.0.1:*"
+                        "https://127.0.0.1:*",
+                        "https://skill-link-emprendedor-pjof.onrender.com"
                 );
 
-        // ✅ ENDPOINT FALLBACK - Con SockJS para compatibilidad
+        // ENDPOINT FALLBACK - Con SockJS para compatibilidad
         registry.addEndpoint("/ws-sockjs")
                 .setAllowedOriginPatterns(
                         "http://localhost:*",
                         "https://localhost:*",
                         "http://127.0.0.1:*",
-                        "https://127.0.0.1:*"
+                        "https://127.0.0.1:*",
+                        "https://skill-link-emprendedor-pjof.onrender.com"
                 )
                 .withSockJS();
     }
 
-    // ✅ OPCIONAL: TaskScheduler para heartbeat (si lo necesitas más adelante)
+    // TaskScheduler para heartbeat (si lo necesitas más adelante)
     @Bean
     public TaskScheduler heartBeatScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
