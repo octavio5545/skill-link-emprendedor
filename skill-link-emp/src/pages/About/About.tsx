@@ -7,7 +7,7 @@ const About = () => {
             <div className="about-page">
                 <h1>Sobre Nosotros</h1>
                 <p>
-                    En <strong>SkillLink</strong>, somos una incubadora de ideas enfocada en potenciar emprendimientos desde su etapa más temprana. Nuestro objetivo es brindar un espacio donde las ideas puedan evolucionar y convertirse en proyectos viables.
+                    En <strong>SkillLink</strong>, somos una plataforma de ideas enfocada en potenciar emprendimientos desde su etapa más temprana. Nuestro objetivo es brindar un espacio donde las ideas puedan evolucionar y convertirse en proyectos viables.
                 </p>
                 <h2>Enfoque</h2>
                 <ul>

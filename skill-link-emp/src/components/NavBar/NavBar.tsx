@@ -1,58 +1,52 @@
 import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Lightbulb } from 'lucide-react';
 import './NavBar.css';
 
-interface Props {
-    userIcon: string;
-    links: { label: string, url: string; onClick?: () => void }[];
-    isLoggedIn: boolean;
-    onLogin?: () => void;
+interface NavLink {
+    label: string;
+    url: string;
+    onClick?: () => void;
 }
 
-// Muestra el menú desplegable y define estado de los clics.
-const NavBar = ({ userIcon, links, isLoggedIn, onLogin }: Props) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
-    const isOpenRef = useRef(isOpen);
+interface Props {
+    userIcon: string;
+    links: NavLink[];
+}
 
+/** Muestra el menú desplegable y define estado de los clics. */
+const NavBar: React.FC<Props> = ({ userIcon, links }) => {
+    const { isLoggedIn } = useAuth();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const location = useLocation();
+
+    const handleToggle = () => {
+        setIsMenuOpen(prev => !prev);
+    };
+
+    // Cierra el menú si se hace clic fuera de él
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (isOpenRef.current && menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsMenuOpen(false);
             }
         };
 
         document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Cierra el menú cuando cambia la ruta
     useEffect(() => {
-        // Sincroniza la referencia con el estado actual
-        isOpenRef.current = isOpen;
-    }, [isOpen]);
-
-    useEffect(() => {
-        if (!isLoggedIn) {
-            setIsOpen(false);
-        }
-    }, [isLoggedIn]);
-
-    const handleToggle = () => {
-        setIsOpen((prev) => !prev);
-    };
-
-      /** Cierra el menú y ejecuta la acción adicional si existe */
-    const handleMenuItemClick = (onClick?: () => void) => {
-        if (onClick) onClick();
-        setIsOpen(false);
-    };
+        setIsMenuOpen(false);
+    }, [location]);
 
     return (
         <nav className="navbar">
-            <Link to="/home">
+            <Link to={isLoggedIn ? "/home" : "/"}>
                 <section className="navbar-wrapper">
                     <div className="navbar-logo__container">
                         <Lightbulb />
@@ -63,34 +57,31 @@ const NavBar = ({ userIcon, links, isLoggedIn, onLogin }: Props) => {
                     </div>
                 </section>
             </Link>
-            <div className="menu" ref={menuRef}>
-                {!isLoggedIn && (
-                    <>
-                        <button className="menu-session" onClick={onLogin}>Iniciar Sesión</button>
-                        <button className="menu-register">Regístrate</button>
-                    </>
-                )}
 
-                {isLoggedIn && (
+            {isLoggedIn && (
+                <div className="menu" ref={menuRef}>
                     <button className="dropdown-toggle" onClick={handleToggle}>
                         <img src={userIcon} alt="Imagen de usuario" className="dropdown-toggle-icon" />
                     </button>
-                )}
-                {isLoggedIn && isOpen && (
-                    <ul className="dropdown-menu">
-                        {links.map((link, index) => (
-                            <li key={index}>
-                                <Link
-                                    to={link.url}
-                                    onClick={() => handleMenuItemClick(link.onClick)}
-                                >
-                                    {link.label}
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
+                    {isMenuOpen && (
+                        <ul className="dropdown-menu">
+                            {links.map((link, index) => (
+                                <li key={index}>
+                                    {link.onClick ? (
+                                        <a href={link.url} onClick={link.onClick}>
+                                            {link.label}
+                                        </a>
+                                    ) : (
+                                        <Link to={link.url}>
+                                            {link.label}
+                                        </Link>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+            )}
         </nav>
     );
 };

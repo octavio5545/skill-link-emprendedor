@@ -1,15 +1,4 @@
- @keyframes fadeSlideIn {
-    0% {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
- 
- .about-container {
+.about-container {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -20,11 +9,13 @@
 .about-page {
     width: 100%;
     max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
     padding: 1rem;
     font-family: 'Segoe UI', sans-serif;
     color: #f1fffe;
-    background: linear-gradient(to right, #0b4541, #025852, #005650);
-    border: 0.01rem solid #009c91;
+    background: linear-gradient(120deg,#6D28D9, #6D28D9, #2563EB, #1b5be5, #0641c1, #012269);
+    border: 0.01rem solid #A78BFA;
     border-radius: 2rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }

@@ -1,13 +1,14 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import NavBar from './NavBar';
 import userImg from '../../assets/userIcon.png';
 
 const NavBarWrapper = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const navigate = useNavigate();
+    const { isLoggedIn, logout } = useAuth();
 
-    const navLinks = [
+    const navLinks = isLoggedIn 
+    ? [
         {
             label: "Inicio",
             url: "/home"
@@ -18,24 +19,21 @@ const NavBarWrapper = () => {
         },
         {
             label: "Cerrar Sesión",
-            url: "/", onClick: () => setIsLoggedIn(false)
+            url: "/",
+            onClick: (e?: React.MouseEvent) => {
+                e?.preventDefault();
+                logout();
+                navigate('/');
+            },
         },
-    ];
-
-    const handleLogin = () => {
-        setIsLoggedIn(true);
-        navigate('/dashboard');
-    };
+    ]: [];
 
     return (
-        <>
-            <NavBar
-                userIcon={userImg}
-                links={navLinks}
-                isLoggedIn={isLoggedIn}
-                onLogin={handleLogin}
-            />
-        </>
+        <NavBar
+            userIcon={userImg}
+            links={navLinks}
+
+        />
     );
 };
 

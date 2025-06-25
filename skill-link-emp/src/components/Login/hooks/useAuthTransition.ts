@@ -3,8 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { forgotPassword, registerUser, loginUser } from '../api/auth';
 import type { AuthMode, FormData, UserRole, UserInterest } from '../types/auth';
 
+import { useAuth } from '../../../context/AuthContext'; ////
+
 export const useAuthTransition = () => {
     const navigate = useNavigate();
+
+    const { login } = useAuth(); ////
+
     const [authMode, setAuthMode] = useState<AuthMode>('login');
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -140,15 +145,16 @@ export const useAuthTransition = () => {
                     interests: formData.interests
                 };
 
-                
+                await registerUser(registerData); ////
+
                 setApiMessage('¡Registro exitoso! Redirigiendo...');
                 setIsError(false);
                 resetForm();
-                
+
                 setTimeout(() => {
                     navigate('/home');
                 }, 1500);
-                
+
             } else if (authMode === 'login') {
                 // Llamar a la API real de login
                 const loginData = {
@@ -157,15 +163,29 @@ export const useAuthTransition = () => {
                 };
 
                 const response = await loginUser(loginData);
-                
+
+                // const { login } = useAuth(); //
+
+                /////
+                login(
+                    {
+                        userId: response.userId,
+                        name: response.name,
+                        secondName: response.secondName,
+                        email: response.email,
+                        role: response.role,
+                        interests: response.interests
+                    }, response.token
+                );
+
                 setApiMessage('¡Inicio de sesión exitoso! Redirigiendo...');
                 setIsError(false);
                 resetForm();
-                
+
                 setTimeout(() => {
                     navigate('/home');
                 }, 1500);
-                
+
             } else if (authMode === 'forgot') {
                 if (!formData.email) {
                     setApiMessage('Por favor ingresa tu correo electrónico.');
@@ -177,7 +197,7 @@ export const useAuthTransition = () => {
                 const response = await forgotPassword(formData.email);
                 setApiMessage(response.mensaje);
                 setIsError(!response.exito);
-                
+
                 if (response.exito) {
                     setFormData(prev => ({ ...prev, email: '' }));
                 }
@@ -189,7 +209,7 @@ export const useAuthTransition = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [authMode, formData, resetForm, passwordValidation.isValid, navigate]);
+    }, [authMode, formData, resetForm, passwordValidation.isValid, navigate, login]); //// "login"
 
     return {
         authMode,
