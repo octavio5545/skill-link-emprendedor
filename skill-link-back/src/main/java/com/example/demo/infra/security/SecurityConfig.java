@@ -60,6 +60,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/conversaciones/**", "/api/mensajes/**")
                         .permitAll()
 
+                        // POST ENDPOINTS - Temporalmente públicos para pruebas
+                        .requestMatchers("/api/posts/**", "/api/comments/**", "/api/reactions/**")
+                        .permitAll()
+
                         // Health check para Render
                         .requestMatchers(HttpMethod.GET, "/actuator/health", "/health")
                         .permitAll()

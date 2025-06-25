@@ -7,7 +7,6 @@ public class MensajeCompletoDTO {
     private String timestampEnvio;
     private EmisorCompletoDTO emisor;
 
-    // Constructores
     public MensajeCompletoDTO() {}
 
     public MensajeCompletoDTO(Long id, String contenido, boolean leido, String timestampEnvio, EmisorCompletoDTO emisor) {
@@ -18,7 +17,6 @@ public class MensajeCompletoDTO {
         this.emisor = emisor;
     }
 
-    // Getters y setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
