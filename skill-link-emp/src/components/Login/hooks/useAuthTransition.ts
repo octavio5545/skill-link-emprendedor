@@ -140,7 +140,8 @@ export const useAuthTransition = () => {
                     interests: formData.interests
                 };
 
-                
+                const response = await registerUser(registerData);
+
                 setApiMessage('¡Registro exitoso! Redirigiendo...');
                 setIsError(false);
                 resetForm();
