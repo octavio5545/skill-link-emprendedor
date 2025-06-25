@@ -1,5 +1,6 @@
 package com.example.demo.user.model;
 
+import com.example.demo.chat.model.Conversacion;
 import com.example.demo.common.Role;
 import com.example.demo.common.UserInterest;
 import com.example.demo.user.dto.UserRegisterRequest;
@@ -39,6 +40,12 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    @OneToMany(mappedBy = "usuario1")
+    private List<Conversacion>conversacionesComoUsuario1;
+
+    @OneToMany(mappedBy = "usuario2")
+    private List<Conversacion>conversacionesComoUsuario2;
 
     @Column(name = "activo")
     private boolean active = true;
