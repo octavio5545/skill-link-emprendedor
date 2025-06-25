@@ -1,19 +1,25 @@
 package com.example.demo.user.controller;
 
+import com.example.demo.common.UserInterest;
 import com.example.demo.user.service.UserService;
 import com.example.demo.user.dto.*;
 import com.example.demo.infra.security.TokenService;
 import com.example.demo.user.model.User;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -47,7 +53,7 @@ public class UserController {
             String jwtToken = tokenService.generateToken(user);
             System.out.println("Token generado exitosamente");
 
-            UserRegisterResponse.UserResponse userResponse = new UserRegisterResponse.UserResponse(
+            UserResponse userResponse = new UserResponse(
                     user.getId(),
                     user.getName(),
                     user.getSecondName(),
@@ -91,14 +97,18 @@ public class UserController {
             String jwtToken = tokenService.generateToken(user);
             System.out.println("Login exitoso para usuario: " + user.getEmail());
 
-            UserLoginResponse response = new UserLoginResponse(
-                    jwtToken,
+            UserResponse userResponse = new UserResponse(
                     user.getId(),
                     user.getName(),
                     user.getSecondName(),
                     user.getEmail(),
                     user.getRole(),
                     user.getInterests()
+            );
+
+            UserLoginResponse response = new UserLoginResponse(
+                    jwtToken,
+                    userResponse
             );
 
             return ResponseEntity.ok(response);
@@ -117,4 +127,114 @@ public class UserController {
                     .body(Map.of("error", "Error interno del servidor."));
         }
     }
+
+    @GetMapping
+    public ResponseEntity<?> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size){
+        try{
+            Page<UserResponse> usersPage = userService.getAllUsers(page, size);
+            return ResponseEntity.ok(usersPage);
+        }catch (Exception e){
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Error interno del servidor: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> getUsersById(@PathVariable Long userId){
+        try{
+            return userService.getUserById(userId)
+                    .map(user -> ResponseEntity.ok(user))
+                    .orElse(ResponseEntity.notFound().build());
+        }catch (Exception e){
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Error interno del servidor: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/")
+    public ResponseEntity<?> updateUser(
+            @Valid @RequestBody UserUpdateRequest userUpdateRequest){
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Long userId = ((User) authentication.getPrincipal()).getId();
+
+            User updatedUser = userService.updateUser(userId, userUpdateRequest);
+
+            UserDetailsResponse response = new UserDetailsResponse(
+                    updatedUser.getId(),
+                    updatedUser.getName(),
+                    updatedUser.getSecondName(),
+                    updatedUser.getEmail(),
+                    updatedUser.getRole(),
+                    updatedUser.getInterests(),
+                    updatedUser.getRegistrationDate(),
+                    updatedUser.isActive()
+            );
+
+            return ResponseEntity.ok(response);
+        }catch (RuntimeException e){
+            System.err.println("Error de runtime al actualizar usuario: " + e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            System.err.println("Error al actualizar usuario: " + e.getMessage());
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Error interno del servidor."));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('Admin')")
+    public ResponseEntity<?> deactivateUserByAdmin(@PathVariable Long id) {
+        try {
+            userService.deactivateUser(id);
+            return ResponseEntity.ok(Map.of("message", "Usuario desactivado exitosamente"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Error interno del servidor"));
+        }
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> deactivateUserBySelf(){
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Long userId = ((User) authentication.getPrincipal()).getId();
+            userService.deactivateUser(userId);
+            return ResponseEntity.ok(Map.of("message", "Usuario desactivado exitosamente"));
+        }catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Error interno del servidor"));
+        }
+    }
+
+    @GetMapping("/interest/{interest}")
+    public ResponseEntity<List<UserResponse>> getUsersByInterest(@PathVariable UserInterest interest){
+        try{
+            List<UserResponse> users = userService.getUsersByInterest(interest);
+            return ResponseEntity.ok(users);
+        }catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<UserResponse>> searchUsers(@RequestParam String name){
+        try{
+            List<UserResponse> users = userService.searchUsersByName(name);
+            return ResponseEntity.ok(users);
+        }catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+
 }

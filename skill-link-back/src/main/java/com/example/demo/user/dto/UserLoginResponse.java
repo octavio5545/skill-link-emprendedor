@@ -7,11 +7,6 @@ import java.util.List;
 
 public record UserLoginResponse(
         String token,
-        Long userId,
-        String name,
-        String secondName,
-        String email,
-        Role role,
-        List<UserInterest> interests
+        UserResponse user
 ) {
 }
