@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Users, Clock, TrendingUp, DollarSign, Search, Filter } from 'lucide-react';
-import { StatsCard } from './StatsCard';
-import { MentorshipCard } from './MentorshipCard';
-import { Sidebar } from './Sidebar';
+import { StatsCard } from './Dashboard/StatsCard';
+import { MentorshipCard } from './Dashboard/MentorshipCard';
+import { Sidebar } from './Dashboard/Sidebar';
 import { mockMentorships, mockSessions } from '../data/mockData';
 
 export const MentorDashboard: React.FC = () => {
