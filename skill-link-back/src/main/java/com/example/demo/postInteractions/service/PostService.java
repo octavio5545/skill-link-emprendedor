@@ -1,5 +1,6 @@
 package com.example.demo.postInteractions.service;
 
+import com.example.demo.postInteractions.controller.WebSocketMessageController; // ✅ AGREGAR: Importar WebSocket controller
 import com.example.demo.postInteractions.dto.CommentDTO;
 import com.example.demo.postInteractions.dto.PostDTO;
 import com.example.demo.postInteractions.model.Post;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime; // ✅ AGREGAR: Para OffsetDateTime
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
@@ -25,20 +27,22 @@ public class PostService {
     private final UserRepository userRepository;
     private final ReactionService reactionService;
     private final CommentService commentService;
+    private final WebSocketMessageController webSocketMessageController; // ✅ AGREGAR: WebSocket controller
 
     @Autowired
     public PostService(PostRepository postRepository,
                        UserRepository userRepository,
                        ReactionService reactionService,
-                       CommentService commentService) {
+                       CommentService commentService,
+                       WebSocketMessageController webSocketMessageController) { // ✅ AGREGAR: Al constructor
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.reactionService = reactionService;
         this.commentService = commentService;
+        this.webSocketMessageController = webSocketMessageController; // ✅ AGREGAR: Asignar
     }
 
-
-    //Convierte Post a PostDTO con menos datos innecesario
+    // Convierte Post a PostDTO con menos datos innecesarios
     private PostDTO convertToDto(Post post, Long currentUserId) {
         if (post == null) {
             return null;
@@ -46,7 +50,7 @@ public class PostService {
 
         PostDTO postDTO = new PostDTO(post);
 
-        //OPTIMIZACIÓN: Solo agregar reacciones si hay alguna
+        // OPTIMIZACIÓN: Solo agregar reacciones si hay alguna
         Map<String, Long> reactionsLong = reactionService.getReactionsCountForTarget(post.getId(), TargetType.POST);
 
         // Filtrar solo las reacciones que tienen conteo > 0
@@ -59,7 +63,7 @@ public class PostService {
             postDTO.setReactions(reactionsWithCounts);
         }
 
-        // 2OPTIMIZACIÓN: Solo agregar userReaction si existe
+        // OPTIMIZACIÓN: Solo agregar userReaction si existe
         if (currentUserId != null) {
             String userReaction = reactionService.getUserReactionForTarget(currentUserId, post.getId(), TargetType.POST);
             if (userReaction != null) { // Solo setear si no es null
@@ -67,7 +71,7 @@ public class PostService {
             }
         }
 
-        // 3. Llenar los comentarios
+        // Llenar los comentarios
         List<CommentDTO> commentDTOs = commentService.getCommentsByPostId(post.getId(), currentUserId);
         if (!commentDTOs.isEmpty()) {
             postDTO.setComments(commentDTOs);
@@ -93,9 +97,9 @@ public class PostService {
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + userId));
 
         post.setUser(user);
-        // *** CAMBIO AQUÍ: Usar LocalDateTime.now().atOffset(ZoneOffset.UTC) ***
-        post.setFechaPublicacion(LocalDateTime.now().atOffset(ZoneOffset.UTC));
-        post.setUltimaActualizacion(LocalDateTime.now().atOffset(ZoneOffset.UTC));
+        // ✅ CORREGIDO: Usar OffsetDateTime.now() directamente
+        post.setFechaPublicacion(OffsetDateTime.now());
+        post.setUltimaActualizacion(OffsetDateTime.now());
 
         return postRepository.save(post);
     }
@@ -106,16 +110,26 @@ public class PostService {
 
         existingPost.setTitulo(postDetails.getTitulo());
         existingPost.setContenido(postDetails.getContenido());
-        // *** CAMBIO AQUÍ: Usar LocalDateTime.now().atOffset(ZoneOffset.UTC) ***
-        existingPost.setUltimaActualizacion(LocalDateTime.now().atOffset(ZoneOffset.UTC));
+        // ✅ CORREGIDO: Usar OffsetDateTime.now() directamente
+        existingPost.setUltimaActualizacion(OffsetDateTime.now());
 
-        return postRepository.save(existingPost);
+        Post updatedPost = postRepository.save(existingPost);
+
+        // ✅ AGREGAR: Notificar actualización vía WebSocket
+        PostDTO postDTO = convertToDto(updatedPost, null);
+        webSocketMessageController.notifyPostUpdate(postDTO);
+
+        return updatedPost;
     }
 
     public void deletePost(Long id) {
         if (!postRepository.existsById(id)) {
             throw new EntityNotFoundException("Post no encontrado con ID: " + id);
         }
+
+        // ✅ AGREGAR: Notificar eliminación vía WebSocket ANTES de eliminar
+        webSocketMessageController.notifyPostDelete(id);
+
         postRepository.deleteById(id);
     }
 

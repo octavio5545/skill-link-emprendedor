@@ -14,8 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset; // ¡Importante! Añadido para ZoneOffset
+import java.time.OffsetDateTime; // ✅ AGREGAR: Para OffsetDateTime
+import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +43,6 @@ public class CommentService {
         this.webSocketMessageController = webSocketMessageController;
         this.reactionService = reactionService;
     }
-
 
     private CommentDTO convertToDto(Comment comment, Long currentUserId) {
         if (comment == null) {
@@ -93,9 +92,9 @@ public class CommentService {
 
         comment.setUser(user);
         comment.setPost(post);
-        // *** CAMBIO AQUÍ: Usar LocalDateTime.now().atOffset(ZoneOffset.UTC) ***
-        comment.setFechaComentario(LocalDateTime.now().atOffset(ZoneOffset.UTC));
-        comment.setUltimaActualizacion(LocalDateTime.now().atOffset(ZoneOffset.UTC)); // También para última actualización
+        // ✅ CORREGIDO: Usar OffsetDateTime.now() directamente
+        comment.setFechaComentario(OffsetDateTime.now());
+        comment.setUltimaActualizacion(OffsetDateTime.now());
 
         if (parentCommentId != null) {
             Comment parentComment = commentRepository.findById(parentCommentId)
@@ -139,10 +138,31 @@ public class CommentService {
         return commentOptional.map(comment -> convertToDto(comment, currentUserId));
     }
 
+    // Método para actualizar comentarios
+    public Comment updateComment(Long id, Comment commentDetails) {
+        Comment existingComment = commentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Comentario no encontrado con ID: " + id));
+
+        existingComment.setContenido(commentDetails.getContenido());
+        existingComment.setUltimaActualizacion(OffsetDateTime.now());
+
+        Comment updatedComment = commentRepository.save(existingComment);
+
+        // Notificar actualización vía WebSocket
+        CommentDTO commentDTO = convertToDto(updatedComment, null);
+        webSocketMessageController.notifyCommentUpdate(commentDTO);
+
+        return updatedComment;
+    }
+
     public void deleteComment(Long id) {
         if (!commentRepository.existsById(id)) {
             throw new EntityNotFoundException("Comentario no encontrado con ID: " + id);
         }
+
+        // Notificar eliminación vía WebSocket ANTES de eliminar
+        webSocketMessageController.notifyCommentDelete(id);
+
         commentRepository.deleteById(id);
     }
 }
