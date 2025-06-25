@@ -78,9 +78,9 @@ export const Home = ()=>{
     setSelectedTags([]);
   };
   return(
-    <main className="min-h-screen bg-gradient-to-br from-emerald-500 via-teal-600 to-purple-700  px-20 py-8">
+    <main className="min-h-screen bg-gradient-to-br from-emerald-500 via-teal-600 to-purple-700  py-8">
       <div className="flex flex-col gap-4 items-center">
-        <div className="w-4/5 px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-6xl px-4 sm:px-6 lg:px-8 py-4 md:w-4/5">
           <div className="flex items-center justify-between">
             <div className="flex-1 max-w-2xl">
               <SearchBar
