@@ -124,12 +124,17 @@ JWT_SECRET=tu-jwt-secret-key
 
 ## 📸 Capturas de Pantalla
 
+
+### Home
+![Home](./docs/dashboard.png)
+*Página princiapl para hacer posts*
+
 ### Dashboard Emprendedor
-![Dashboard Emprendedor](./docs/dashboard-entrepreneur-dashboard.png)
+![Dashboard Emprendedor](./docs/entepreneur-dashboard.png)
 *Panel principal para gestión de proyectos y seguimiento de MVP*
 
 ### Dashboard Mentor
-![Dashboard Mentor](./docs/dashboard-mentor-dashboard.png)
+![Dashboard Mentor](./docs/mentor-dashboard.png)
 *Panel de mentorías activas y gestión de sesiones*
 
 ## 🔗 APIs Disponibles
@@ -162,8 +167,8 @@ mvn clean package
 
 ## 👨‍💻 Desarrolladores
 
-- **Joseph Aparicio** - *Full Stack Developer* - [@JosephAparicio](https://github.com/JosephAparicio) - joseph_539_11@hotmail.com
 - **David Castro** - *Full Stack Developer* - [@deca-dev](https://github.com/deca-dev) - davidernesto.castroanaya@gmail.com
+- **Joseph Aparicio** - *Full Stack Developer* - [@JosephAparicio](https://github.com/JosephAparicio) - joseph_539_11@hotmail.com
 - **Harry Hernández** - *Front End Developer* - [@HarryHndz](https://github.com/HarryHndz) - harry200490@gmail.com
 - **José Carmona** - *Front End Developer* - [@pecarper](https://github.com/pecarper) - ing.jmcarmona@gmail.com
 - **Andy Alexis** - *Back End Developer* - [@AndyAlexisJA11](https://github.com/AndyAlexisJA11) - andialexis@hotmail.com
