@@ -1,11 +1,15 @@
+import React, { useState } from 'react';
 import { Lightbulb } from 'lucide-react';
 import { useAuthTransition } from './hooks/useAuthTransition';
 import { AuthBackground } from './components/AuthBackground';
 import { AuthForm } from './components/AuthForm';
+import { MobileInfoBanner } from './components/MobileInfoBanner';
 
 import './index.css';
 
 export const Login: React.FC = () => {
+  const [isMobileInfoExpanded, setIsMobileInfoExpanded] = useState(false);
+  
   const {
     authMode,
     formData,
@@ -50,6 +54,12 @@ export const Login: React.FC = () => {
                 </div>
                 <h1 className="text-2xl font-bold text-white ml-3">SkillLink</h1>
               </div>
+
+              <MobileInfoBanner 
+                authMode={authMode}
+                isExpanded={isMobileInfoExpanded}
+                onToggle={() => setIsMobileInfoExpanded(!isMobileInfoExpanded)}
+              />
 
               <AuthForm
                 authMode={authMode}

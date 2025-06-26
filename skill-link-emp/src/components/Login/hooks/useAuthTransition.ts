@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { forgotPassword, registerUser, loginUser } from '../api/auth';
 import type { AuthMode, FormData, UserRole, UserInterest } from '../types/auth';
 
-import { useAuth } from '../../../context/AuthContext'; ////
+import { useAuth } from '../../../context/AuthContext';
 
 export const useAuthTransition = () => {
     const navigate = useNavigate();
@@ -103,7 +103,7 @@ export const useAuthTransition = () => {
             setTimeout(() => {
                 setIsTransitioning(false);
             }, 100);
-        }, 600);
+        }, 500);
     }, [resetForm]);
 
     const handleSubmit = useCallback(async (e: React.FormEvent) => {
@@ -166,10 +166,9 @@ export const useAuthTransition = () => {
 
                 // const { login } = useAuth(); //
 
-                /////
                 login(
                     {
-                        userId: response.userId,
+                        userId: String(response.userId),
                         name: response.name,
                         secondName: response.secondName,
                         email: response.email,
@@ -209,7 +208,7 @@ export const useAuthTransition = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [authMode, formData, resetForm, passwordValidation.isValid, navigate, login]); //// "login"
+    }, [authMode, formData, resetForm, passwordValidation.isValid, navigate, login]);
 
     return {
         authMode,
