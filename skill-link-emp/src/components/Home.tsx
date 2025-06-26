@@ -10,7 +10,12 @@ import { filterPosts, getAllTags } from "../utils/post";
 import { useNavigate } from "react-router-dom";
 import { usePosts } from './Post/hooks/usePosts';
 
-export const Home = ({ selectedTag, currentUserId }) => {
+interface HomeProps {
+  selectedTag: string;
+  currentUserId: string | null;
+}
+
+export const Home = ({ selectedTag, currentUserId }: HomeProps) => {
   const { 
       posts, 
       loading, 
@@ -26,7 +31,7 @@ export const Home = ({ selectedTag, currentUserId }) => {
   let router = useNavigate()
   const allTags = useMemo(() => getAllTags(posts), [posts]);
 
-  
+  console.log('🏠 Home - Current User ID:', currentUserId);
   
   const filteredPosts = useMemo(() => 
     filterPosts(posts, searchTerm, selectedTags),
@@ -46,7 +51,7 @@ export const Home = ({ selectedTag, currentUserId }) => {
   };
 
   return(
-    <main className="min-h-screen bg-gradient-to-br from-emerald-500 via-teal-600 to-purple-700  py-8">
+    <main className="min-h-screen bg-gradient-to-br from-emerald-500 via-teal-600 to-purple-700  py-4">
       <div className="flex flex-col gap-4 items-center">
         <div className="max-w-6xl px-4 sm:px-6 lg:px-8 py-4 md:w-4/5">
           <div className="flex items-center justify-between">
@@ -77,7 +82,7 @@ export const Home = ({ selectedTag, currentUserId }) => {
           </div>
         </div>
       </div>
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <aside className="lg:col-span-1">

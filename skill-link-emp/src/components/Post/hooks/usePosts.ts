@@ -11,6 +11,7 @@ import {
 } from './utils/postUtils';
 
 import { getUserAvatar } from '../utils/avatarUtils';
+import { usePostsContext } from '../../../context/PostsContext';
 
 interface UsePostsOptions {
   currentUserId: string | null;
@@ -30,7 +31,9 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
+  const { shouldRefresh, markAsRefreshed } = usePostsContext();
   const { handlePostReaction, handleCommentReaction } = useReactions({ currentUserId });
 
   // Función para asegurar que los usuarios tengan avatares
@@ -46,15 +49,16 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
 
   // Función para cargar posts
   const loadPosts = useCallback(async () => {
-    setLoading(true);
+    if (!hasInitialLoad) {
+      setLoading(true);
+    }
+    
     setError(null);
+    
     try {
       const data = await fetchPosts(currentUserId);
-      console.log('Datos RAW del backend:', data);
-      
       const normalizedPosts: Post[] = data.map(post => {
         const parsedPost = parsePostDates(post);
-        
         parsedPost.author = ensureUserHasAvatar(parsedPost.author);
         const ensureCommentAvatars = (comments: Comment[]): Comment[] => {
           return comments.map(comment => ({
@@ -68,17 +72,20 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
         
         return parsedPost;
       });
-      
-      console.log('Posts normalizados con avatares:', normalizedPosts);
-      
       setPosts(normalizedPosts);
+      if (!hasInitialLoad) {
+        setHasInitialLoad(true);
+      }
+      if (shouldRefresh) {
+        markAsRefreshed();
+      }
+      
     } catch (err: any) {
-      console.error("Error fetching posts:", err);
       setError("No se pudieron cargar los posts. Intenta de nuevo más tarde.");
     } finally {
       setLoading(false);
     }
-  }, [currentUserId, ensureUserHasAvatar]);
+  }, [currentUserId, ensureUserHasAvatar, hasInitialLoad, shouldRefresh, markAsRefreshed]);
 
   const handleNewComment = useCallback(async (
     postId: string, 
@@ -91,12 +98,7 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
     }
 
     try {
-      console.log('Creando comentario:', { postId, content, parentCommentId, currentUserId });
-      
       const newCommentDTO = await createComment(content, postId, currentUserId, parentCommentId);
-      
-      console.log('Comentario creado, DTO recibido:', newCommentDTO);
-      
       const newComment: Comment = {
         id: newCommentDTO.id,
         author: ensureUserHasAvatar(newCommentDTO.author),
@@ -106,7 +108,6 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
         userReaction: newCommentDTO.userReaction || null,
         replies: newCommentDTO.replies || []
       };
-
       setPosts(prevPosts => {
         return prevPosts.map(post => {
           if (post.id === postId) {
@@ -144,25 +145,19 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
       });
 
     } catch (error) {
-      console.error('Error al crear comentario:', error);
       throw error;
     }
   }, [currentUserId, ensureUserHasAvatar]);
 
   const handleNewCommentFromWS = useCallback((newComment: Comment) => {
-    console.log('Nuevo comentario recibido vía WebSocket:', newComment);
-    
     const commentWithAvatar = {
       ...newComment,
       author: ensureUserHasAvatar(newComment.author)
     };
-    
     setPosts(prevPosts => addCommentToPosts(prevPosts, commentWithAvatar));
   }, [ensureUserHasAvatar]);
 
   const handleCommentUpdateFromWS = useCallback((updatedComment: Comment) => {
-    console.log('Comentario actualizado recibido vía WebSocket:', updatedComment);
-    
     const commentWithAvatar = {
       ...updatedComment,
       author: ensureUserHasAvatar(updatedComment.author)
@@ -193,8 +188,6 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
   }, [ensureUserHasAvatar]);
 
   const handleCommentDeleteFromWS = useCallback((deletedCommentId: string) => {
-    console.log('📡 Comentario eliminado recibido vía WebSocket:', deletedCommentId);
-    
     setPosts(prevPosts => {
       return prevPosts.map(post => {
         const removeCommentsRecursive = (comments: Comment[]): Comment[] => {
@@ -215,8 +208,6 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
   }, []);
 
   const handlePostUpdateFromWS = useCallback((updatedPost: Post) => {
-    console.log('📡 Post actualizado recibido vía WebSocket:', updatedPost);
-    
     const postWithAvatar = {
       ...updatedPost,
       author: ensureUserHasAvatar(updatedPost.author)
@@ -238,23 +229,18 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
   }, [ensureUserHasAvatar]);
 
   const handlePostDeleteFromWS = useCallback((deletedPostId: string) => {
-    console.log('📡 Post eliminado recibido vía WebSocket:', deletedPostId);
-    
     setPosts(prevPosts => {
       return prevPosts.filter(post => post.id !== deletedPostId);
     });
   }, []);
 
   const handleReactionChange = useCallback(async (reactionNotification: NotificationReaction) => {
-    console.log('Procesando notificación de reacción:', reactionNotification);
-
     if (reactionNotification.targetType === 'POST') {
       let userReaction: string | null = null;
       
       if (currentUserId) {
         try {
           userReaction = await fetchUserReaction(currentUserId, reactionNotification.targetId, 'POST');
-          console.log('UserReaction de POST consultada:', userReaction);
         } catch (error) {
           console.error('Error consultando userReaction de POST:', error);
         }
@@ -263,8 +249,6 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
       setPosts((prevPosts: Post[]) => {
         return prevPosts.map((post: Post) => {
           if (post.id === reactionNotification.targetId) {
-            console.log('Actualizando reacciones del post:', post.id);
-            
             return {
               ...post,
               reactions: { ...reactionNotification.reactionCounts },
@@ -281,7 +265,6 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
       if (currentUserId) {
         try {
           userReaction = await fetchUserReaction(currentUserId, reactionNotification.targetId, 'COMMENT');
-          console.log('💬 UserReaction de COMMENT consultada:', userReaction);
         } catch (error) {
           console.error('Error consultando userReaction del comentario:', error);
         }
@@ -289,8 +272,6 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
 
       setPosts((prevPosts: Post[]) => {
         const timestamp = Date.now();
-        console.log(`Forzando actualización de comentarios - Timestamp: ${timestamp}`);
-        
         return prevPosts.map((post: Post) => {
           const updatedPost = {
             ...post,
@@ -318,8 +299,10 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
   });
 
   useEffect(() => {
-    loadPosts();
-  }, [loadPosts]);
+    if (!hasInitialLoad || shouldRefresh) {
+      loadPosts();
+    }
+  }, [loadPosts, hasInitialLoad, shouldRefresh]);
 
   return { 
     posts, 

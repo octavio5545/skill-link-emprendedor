@@ -180,7 +180,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({
             } ${(isLoading || (authMode === 'register' && (!formData.role || formData.interests.length === 0 || !passwordValidation.isValid))) ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <span className="mr-2">
-              {isLoading ? ( <span className="mr-2 animate-spin">⚙️</span>) : null}
+              {isLoading ? (
+                <span className="mr-2 inline-block animate-spin">⚙️</span>
+              ) : null}
               {authMode === 'login' && (isLoading ? 'Iniciando Sesión...' : 'Iniciar Sesión')}
               {authMode === 'register' && (isLoading ? 'Registrando...' : 'Crear Cuenta')}
               {authMode === 'forgot' && (isLoading ? 'Enviando Enlace...' : 'Enviar Enlace')}

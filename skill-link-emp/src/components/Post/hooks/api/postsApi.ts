@@ -11,7 +11,21 @@ export const fetchPosts = async (currentUserId: string | null): Promise<Post[]> 
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  return response.json();
+  const posts = await response.json();
+  
+  const sortedPosts = posts.sort((a: any, b: any) => {
+    const dateA = new Date(a.createdAt).getTime();
+    const dateB = new Date(b.createdAt).getTime();
+    return dateB - dateA;
+  });
+
+  console.log('📅 Posts ordenados por fecha:', sortedPosts.map((p: any) => ({
+    id: p.id,
+    title: p.title,
+    createdAt: p.createdAt
+  })));
+
+  return sortedPosts;
 };
 
 export const sendReaction = async (

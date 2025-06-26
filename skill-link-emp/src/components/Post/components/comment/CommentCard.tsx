@@ -62,11 +62,8 @@ const CommentCard: React.FC<CommentCardProps> = ({
   }, []);
 
   const handleReaction = (reactionType: string) => {
-    console.log('Reacción a comentario:', comment.id, reactionType, 'forceRenderKey:', forceRenderKey);
     if (onReaction) {
       onReaction(comment.id, reactionType);
-    } else {
-      console.warn('No se proporcionó función onReaction para el comentario');
     }
   };
 
@@ -76,7 +73,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
         await onNewComment('1', content, comment.id);
         setShowReplyForm(false);
         setShowReplies(true);
-        console.log('Respuesta enviada exitosamente');
       } catch (error) {
         console.error('Error al enviar respuesta:', error);
       }
@@ -104,7 +100,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
     try {
       await updateComment(comment.id, editContent);
       setIsEditing(false);
-      console.log('✅ Comentario editado exitosamente');
     } catch (error) {
       console.error('Error al editar comentario:', error);
       alert('Error al editar el comentario. Inténtalo de nuevo.');
@@ -123,16 +118,26 @@ const CommentCard: React.FC<CommentCardProps> = ({
     try {
       await deleteComment(comment.id);
       setShowDeleteConfirm(false);
-      console.log('Comentario eliminado exitosamente');
     } catch (error) {
       console.error('Error al eliminar comentario:', error);
-      alert('Error al eliminar el comentario. Inténtalo de nuevo.');
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const isAuthor = currentUserId && comment.author.id === currentUserId;
+  const isAuthor = currentUserId && comment.author.id && String(currentUserId) === String(comment.author.id);
+
+  console.log('CommentCard Debug:', {
+    commentId: comment.id,
+    currentUserId,
+    authorId: comment.author.id,
+    currentUserIdType: typeof currentUserId,
+    authorIdType: typeof comment.author.id,
+    currentUserIdString: String(currentUserId),
+    authorIdString: String(comment.author.id),
+    isAuthor,
+    comparison: `${String(currentUserId)} === ${String(comment.author.id)}`
+  });
 
   console.log(`Renderizando CommentCard ${comment.id}:`, {
     userReaction: comment.userReaction,
