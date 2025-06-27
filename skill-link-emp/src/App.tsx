@@ -9,6 +9,7 @@ import NavBarWrapper from './components/NavBar/NavBarWrapper';
 import Footer from './components/Footer/Footer.tsx';
 import { AddPost } from './components/Home/AddPost.tsx';
 import About from './pages/About/About.tsx';
+import ChatPage from './components/Chat/components/chat/ChatPage';
 import { AuthProvider, useAuth } from './context/AuthContext.tsx';
 import { PostsProvider } from './context/PostsContext.tsx';
 import PrivateRoute from './components/PrivateRoutes.tsx';
@@ -22,12 +23,13 @@ function AppContent() {
   const currentUserId = user?.userId || null;
 
   const isLoginPage = location.pathname === '/';
+  const isChatPage = location.pathname === '/messages';
   
   return (
     <div className='app-container'>
       {!isLoginPage && <NavBarWrapper />}
       
-      <main className='app-main-content'>
+      <main className={`app-main-content ${isChatPage ? 'chat-page' : ''}`}>
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/about" element={<About />} />
@@ -36,10 +38,11 @@ function AppContent() {
           <Route path="/reset-password" element={<PrivateRoute><ResetPasswordPage /></PrivateRoute>} />
           <Route path="/dashboard" element={<PrivateRoute><EntrepreneurDashboard /></PrivateRoute>} />
           <Route path="/mentor-dashboard" element={<PrivateRoute><MentorDashboard /></PrivateRoute>} />
+          <Route path="/messages" element={<PrivateRoute><ChatPage /></PrivateRoute>} />
         </Routes>
       </main>
       
-      {!isLoginPage && <Footer />}
+      {!isLoginPage && !isChatPage && <Footer />}
     </div>
   );
 }

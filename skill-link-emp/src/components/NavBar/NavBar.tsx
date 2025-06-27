@@ -3,6 +3,9 @@ import { useAuth } from '../../context/AuthContext';
 import { useLocation, Link } from 'react-router-dom';
 import { Lightbulb, Home, BarChart3, MessageCircle, Bell, Menu, X } from 'lucide-react';
 import { getUserAvatar } from '../Post/utils/avatarUtils';
+import { NotificationDropdown } from '../Chat/components/notifications/NotificationDropdown';
+import { useNotifications } from '../Chat/hooks/notifications/useNotifications';
+import { useChat } from '../Chat/hooks/chat/useChat';
 import './NavBar.css';
 
 interface NavLink {
@@ -14,18 +17,34 @@ interface NavLink {
 interface Props {
     userIcon: string;
     links: NavLink[];
+    onSectionChange?: (section: string) => void;
+    onSelectConversation?: (conversationId: number) => void;
 }
 
-const NavBar: React.FC<Props> = ({ userIcon, links }) => {
+const NavBar: React.FC<Props> = ({ 
+    userIcon, 
+    links, 
+    onSectionChange,
+    onSelectConversation 
+}) => {
     const { isLoggedIn, user } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [notificationCount] = useState(3); // Por ahora hardcodeado
     const menuRef = useRef<HTMLDivElement>(null);
     const mobileMenuRef = useRef<HTMLDivElement>(null);
     const location = useLocation();
 
     const userAvatar = user?.userId ? getUserAvatar(user.userId) : userIcon;
+    
+    const currentUserId = user?.userId ? Number(user.userId) : 1;
+    const chatData = useChat(currentUserId);
+
+    const {
+        notifications,
+        unreadCount,
+        markNotificationAsRead,
+        clearAllNotifications
+    } = useNotifications(chatData.conversations, chatData.activeConversationId);
     
     const handleToggle = () => {
         setIsMenuOpen(prev => !prev);
@@ -35,12 +54,22 @@ const NavBar: React.FC<Props> = ({ userIcon, links }) => {
         setIsMobileMenuOpen(prev => !prev);
     };
 
-    const handleNotificationClick = () => {
-        // Falta implementar funcionalidad
+    const handleNotificationClick = (conversationId: number) => {
+        if (onSectionChange) {
+            onSectionChange('messages');
+        }
+        if (onSelectConversation && conversationId > 0) {
+            setTimeout(() => {
+                onSelectConversation(conversationId);
+            }, 100);
+        }
     };
 
-    const handleMessagesClick = () => {
-        // Falta implementar funcionalidad
+    const handleMobileNotificationClick = () => {
+        // Para móvil, simplemente cambia a la sección de mensajes
+        if (onSectionChange) {
+            onSectionChange('messages');
+        }
     };
 
     useEffect(() => {
@@ -111,18 +140,20 @@ const NavBar: React.FC<Props> = ({ userIcon, links }) => {
                                 Dashboard
                             </Link>
                             
-                            <button 
-                                onClick={handleMessagesClick}
-                                className="flex items-center text-white hover:bg-white/20 px-4 py-2 rounded-lg transition-all duration-200"
+                            <Link 
+                                to="/messages"
+                                className={`flex items-center text-white hover:bg-white/20 px-4 py-2 rounded-lg transition-all duration-200 ${
+                                    location.pathname === '/messages' ? 'bg-white/20' : ''
+                                }`}
                             >
                                 <MessageCircle className="w-4 h-4 mr-2" />
                                 Mensajes
-                            </button>
+                            </Link>
                         </div>
 
-                        {/* Menú de usuario y notificaciones */}
+                        {/* Menu de usuario y notificaciones */}
                         <div className="menu">
-                            {/* Botón hamburguesa para móvil */}
+                            {/* Botón hamburguesa para movil */}
                             <button 
                                 className="mobile-menu-button"
                                 onClick={handleMobileMenuToggle}
@@ -131,17 +162,15 @@ const NavBar: React.FC<Props> = ({ userIcon, links }) => {
                             </button>
 
                             {/* Notificaciones (visible en desktop) */}
-                            <button 
-                                className="notification-button desktop-only"
-                                onClick={handleNotificationClick}
-                            >
-                                <Bell className="w-5 h-5" />
-                                {notificationCount > 0 && (
-                                    <span className="notification-badge">
-                                        {notificationCount > 9 ? '9+' : notificationCount}
-                                    </span>
-                                )}
-                            </button>
+                            <div className="desktop-only">
+                                <NotificationDropdown
+                                    notifications={notifications}
+                                    unreadCount={unreadCount}
+                                    onNotificationClick={handleNotificationClick}
+                                    onMarkAsRead={markNotificationAsRead}
+                                    onClearAll={clearAllNotifications}
+                                />
+                            </div>
 
                             {/* Avatar del usuario (visible en desktop) */}
                             <div className="desktop-only" ref={menuRef}>
@@ -209,29 +238,27 @@ const NavBar: React.FC<Props> = ({ userIcon, links }) => {
                                 <span>Dashboard</span>
                             </Link>
                             
-                            <button 
-                                onClick={() => {
-                                    handleMessagesClick();
-                                    setIsMobileMenuOpen(false);
-                                }}
-                                className="mobile-nav-link"
+                            <Link 
+                                to="/messages"
+                                className={`mobile-nav-link ${location.pathname === '/messages' ? 'active' : ''}`}
+                                onClick={() => setIsMobileMenuOpen(false)}
                             >
                                 <MessageCircle className="w-5 h-5" />
                                 <span>Mensajes</span>
-                            </button>
+                            </Link>
 
                             <button 
                                 onClick={() => {
-                                    handleNotificationClick();
+                                    handleMobileNotificationClick();
                                     setIsMobileMenuOpen(false);
                                 }}
                                 className="mobile-nav-link"
                             >
                                 <Bell className="w-5 h-5" />
                                 <span>Notificaciones</span>
-                                {notificationCount > 0 && (
+                                {unreadCount > 0 && (
                                     <span className="mobile-notification-badge">
-                                        {notificationCount > 9 ? '9+' : notificationCount}
+                                        {unreadCount > 9 ? '9+' : unreadCount}
                                     </span>
                                 )}
                             </button>

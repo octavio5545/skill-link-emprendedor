@@ -18,12 +18,6 @@ export const fetchPosts = async (currentUserId: string | null): Promise<Post[]> 
     return dateB - dateA;
   });
 
-  console.log('Posts ordenados por fecha:', sortedPosts.map((p: any) => ({
-    id: p.id,
-    title: p.title,
-    createdAt: p.createdAt
-  })));
-
   return sortedPosts;
 };
 
@@ -34,8 +28,6 @@ export const sendReaction = async (
   reactionType: string,
   reactionTypeId: number
 ): Promise<void> => {
-  console.log(`Enviando reacción: ${reactionType} (ID: ${reactionTypeId}) para ${targetType} ${targetId} con usuario ${currentUserId}`);
-  
   const response = await fetch(
     `${API_BASE_URL}/reactions?userId=${currentUserId}&targetId=${targetId}&targetType=${targetType}&reactionTypeId=${reactionTypeId}`,
     {
@@ -45,15 +37,10 @@ export const sendReaction = async (
       },
     }
   );
-
-  console.log(`Respuesta del servidor: ${response.status} ${response.statusText}`);
-
   if (!response.ok && response.status !== 409) {
     const errorText = await response.text();
     throw new Error(`Fallo al enviar la reacción: ${response.status} ${response.statusText} - ${errorText}`);
   }
-
-  console.log(`Reacción ${targetType} enviada exitosamente!`);
 };
 
 export const fetchUserReaction = async (
@@ -87,13 +74,6 @@ export const createComment = async (
   userId: string,
   parentCommentId?: string
 ): Promise<any> => {
-  console.log(`Creando comentario:`, {
-    content,
-    postId,
-    userId,
-    parentCommentId
-  });
-
   const url = new URL(`${API_BASE_URL}/comments`);
   url.searchParams.append('postId', postId);
   url.searchParams.append('userId', userId);
@@ -111,15 +91,12 @@ export const createComment = async (
     })
   });
 
-  console.log(`Respuesta del servidor: ${response.status} ${response.statusText}`);
-
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Error al crear comentario: ${response.status} ${response.statusText} - ${errorText}`);
   }
 
   const result = await response.json();
-  console.log(`Comentario creado exitosamente:`, result);
   return result;
 };
 
@@ -129,8 +106,6 @@ export const updatePost = async (
   content: string,
   currentUserId?: string
 ): Promise<any> => {
-  console.log(`Editando post ${postId}:`, { title, content, currentUserId });
-
   const url = new URL(`${API_BASE_URL}/posts/${postId}`);
   if (currentUserId) {
     url.searchParams.append('currentUserId', currentUserId);
@@ -147,21 +122,17 @@ export const updatePost = async (
     })
   });
 
-  console.log(`Respuesta del servidor: ${response.status} ${response.statusText}`);
-
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Error al editar post: ${response.status} ${response.statusText} - ${errorText}`);
   }
 
   const result = await response.json();
-  console.log(`Post editado exitosamente:`, result);
   return result;
 };
 
 
 export const deletePost = async (postId: string): Promise<void> => {
-  console.log(`Eliminando post ${postId}`);
 
   const response = await fetch(`${API_BASE_URL}/posts/${postId}`, {
     method: 'DELETE',
@@ -170,14 +141,11 @@ export const deletePost = async (postId: string): Promise<void> => {
     }
   });
 
-  console.log(`Respuesta del servidor: ${response.status} ${response.statusText}`);
-
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Error al eliminar post: ${response.status} ${response.statusText} - ${errorText}`);
   }
 
-  console.log(`Post eliminado exitosamente`);
 };
 
 
@@ -185,8 +153,6 @@ export const updateComment = async (
   commentId: string,
   content: string
 ): Promise<any> => {
-  console.log(`Editando comentario ${commentId}:`, { content });
-
   const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
     method: 'PUT',
     headers: {
@@ -197,20 +163,16 @@ export const updateComment = async (
     })
   });
 
-  console.log(`Respuesta del servidor: ${response.status} ${response.statusText}`);
-
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Error al editar comentario: ${response.status} ${response.statusText} - ${errorText}`);
   }
 
   const result = await response.json();
-  console.log(`Comentario editado exitosamente:`, result);
   return result;
 };
 
 export const deleteComment = async (commentId: string): Promise<void> => {
-  console.log(`Eliminando comentario ${commentId}`);
 
   const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
     method: 'DELETE',
@@ -219,12 +181,8 @@ export const deleteComment = async (commentId: string): Promise<void> => {
     }
   });
 
-  console.log(`Respuesta del servidor: ${response.status} ${response.statusText}`);
-
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Error al eliminar comentario: ${response.status} ${response.statusText} - ${errorText}`);
   }
-
-  console.log(`Comentario eliminado exitosamente`);
 };

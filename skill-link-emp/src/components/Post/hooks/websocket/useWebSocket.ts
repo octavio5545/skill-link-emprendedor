@@ -41,10 +41,7 @@ export const useWebSocket = ({
       heartbeatOutgoing: 4000,
 
       onConnect: () => {
-        console.log('WebSocket Conectado!');
-
         client.subscribe('/topic/comments/new', message => {
-          console.log('Nueva notificación de comentario RAW:', message.body);
           try {
             const newComment: Comment = JSON.parse(message.body);
             newComment.createdAt = parseDate(newComment.createdAt);
@@ -54,10 +51,8 @@ export const useWebSocket = ({
           }
         });
 
-        // Suscripción a comentarios editados
         if (onCommentUpdate) {
           client.subscribe('/topic/comments/updated', message => {
-            console.log('Comentario actualizado RAW:', message.body);
             try {
               const updatedComment: Comment = JSON.parse(message.body);
               updatedComment.createdAt = parseDate(updatedComment.createdAt);
@@ -68,7 +63,6 @@ export const useWebSocket = ({
           });
         }
 
-        // Suscripción a comentarios eliminados
         if (onCommentDelete) {
           client.subscribe('/topic/comments/deleted', message => {
             console.log('Comentario eliminado RAW:', message.body);
@@ -81,7 +75,6 @@ export const useWebSocket = ({
           });
         }
 
-        // Suscripción a posts editados
         if (onPostUpdate) {
           client.subscribe('/topic/posts/updated', message => {
             console.log('Post actualizado RAW:', message.body);
@@ -95,7 +88,6 @@ export const useWebSocket = ({
           });
         }
 
-        // Suscripción a posts eliminados
         if (onPostDelete) {
           client.subscribe('/topic/posts/deleted', message => {
             console.log('Post eliminado RAW:', message.body);
@@ -108,12 +100,10 @@ export const useWebSocket = ({
           });
         }
 
-        // Suscripción a reacciones
         client.subscribe('/topic/reactions/new', message => {
           console.log('Nueva notificación de reacción RAW:', message.body);
           try {
             const reactionNotification: NotificationReaction = JSON.parse(message.body);
-            console.log('Notificación de reacción PARSEADA:', reactionNotification);
             onReactionChange(reactionNotification);
           } catch (e) {
             console.error('ERROR al procesar notificación de reacción del WebSocket:', e, 'Mensaje recibido:', message.body);
@@ -138,7 +128,6 @@ export const useWebSocket = ({
     return () => {
       if (client.connected) {
         client.deactivate();
-        console.log('Desactivando conexión WebSocket.');
       }
     };
   }, [onNewComment, onReactionChange, onCommentUpdate, onCommentDelete, onPostUpdate, onPostDelete]);

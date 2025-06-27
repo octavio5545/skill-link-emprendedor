@@ -42,7 +42,7 @@ export const useReactions = ({
     try {
       await sendReaction(currentUserId, postId, 'POST', reactionType, reactionTypeId);
     } catch (error) {
-      console.error("❌ Error al enviar la reacción al post:", error);
+      console.error("Error al enviar la reacción al post:", error);
     }
   }, [currentUserId, onOptimisticPostReaction]);
 
@@ -67,7 +67,7 @@ export const useReactions = ({
     try {
       await sendReaction(currentUserId, commentId, 'COMMENT', reactionType, reactionTypeId);
     } catch (error) {
-      console.error("❌ Error al enviar la reacción al comentario:", error);
+      console.error("Error al enviar la reacción al comentario:", error);
     }
   }, [currentUserId, onOptimisticCommentReaction]);
 

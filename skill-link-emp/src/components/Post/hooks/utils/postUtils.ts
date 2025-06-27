@@ -49,13 +49,6 @@ export const updateCommentReactionsRecursive = (
 ): Comment[] => {
   return comments.map(comment => {
     if (comment.id === reactionNotification.targetId && reactionNotification.targetType === 'COMMENT') {
-      console.log(`🔄 Actualizando comentario ${comment.id}:`, {
-        conteoAntes: comment.reactions,
-        conteoDespues: reactionNotification.reactionCounts,
-        userReactionAntes: comment.userReaction,
-        userReactionDespues: userReaction !== undefined ? userReaction : comment.userReaction
-      });
-      
       const updatedComment = {
         ...comment,
         reactions: { ...reactionNotification.reactionCounts },
@@ -63,7 +56,6 @@ export const updateCommentReactionsRecursive = (
         replies: comment.replies ? [...comment.replies] : []
       };
       
-      console.log('✅ Comentario actualizado:', updatedComment);
       return updatedComment;
     }
     
