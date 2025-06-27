@@ -36,5 +36,10 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             "ORDER BY c.fechaComentario ASC")
     List<Comment> findCommentsWithEverything(@Param("postId") Long postId);
 
+    @Query("SELECT c FROM Comment c " +
+            "WHERE c.post.id IN :postIds " +
+            "ORDER BY c.post.id, c.fechaComentario ASC")
+    List<Comment> findCommentsWithRepliesByMultiplePostIds(@Param("postIds") List<Long> postIds);
+
     boolean existsById(Long id);
 }

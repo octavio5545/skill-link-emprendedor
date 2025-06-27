@@ -10,6 +10,9 @@ import com.example.demo.postInteractions.repository.PostRepository;
 import com.example.demo.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -43,7 +46,8 @@ public class PostService {
     private PostDTO convertToDto(Post post, Long currentUserId,
                                  Map<Long, Map<String, Long>> batchReactionCounts,
                                  Map<Long, String> batchUserReactions,
-                                 Map<Long, User> batchUsers) {
+                                 Map<Long, User> batchUsers,
+                                 Map<Long, List<CommentDTO>> batchComments) {
         long startTime = System.currentTimeMillis();
 
         if (post == null) {
@@ -60,7 +64,6 @@ public class PostService {
             User user = batchUsers.get(post.getUser().getId());
             postDTO.setAuthor(new com.example.demo.postInteractions.dto.UserDTO(user));
         } else {
-            // Fallback individual solo si no hay batch
             postDTO.setAuthor(new com.example.demo.postInteractions.dto.UserDTO(post.getUser()));
         }
 
@@ -71,11 +74,6 @@ public class PostService {
         } else {
             postDTO.setTags(List.of());
         }
-
-        long basicDtoTime = System.currentTimeMillis();
-        System.out.println("📝 [POST-" + post.getId() + "] DTO básico creado en: " + (basicDtoTime - startTime) + "ms");
-
-        long reactionStartTime = System.currentTimeMillis();
 
         if (batchReactionCounts != null && batchReactionCounts.containsKey(post.getId())) {
             Map<String, Long> reactionsLong = batchReactionCounts.get(post.getId());
@@ -98,7 +96,6 @@ public class PostService {
         }
 
         if (currentUserId != null) {
-            long userReactionStartTime = System.currentTimeMillis();
             if (batchUserReactions != null) {
                 String userReaction = batchUserReactions.get(post.getId());
                 if (userReaction != null) {
@@ -112,53 +109,61 @@ public class PostService {
             }
         }
 
-        long commentsStartTime = System.currentTimeMillis();
-        List<CommentDTO> commentDTOs = commentService.getCommentsByPostId(post.getId(), currentUserId, batchUsers);
-        if (!commentDTOs.isEmpty()) {
-            postDTO.setComments(commentDTOs);
+        if (batchComments != null && batchComments.containsKey(post.getId())) {
+            List<CommentDTO> commentDTOs = batchComments.get(post.getId());
+            if (!commentDTOs.isEmpty()) {
+                postDTO.setComments(commentDTOs);
+            }
+        } else {
+            List<CommentDTO> commentDTOs = commentService.getCommentsByPostId(post.getId(), currentUserId, batchUsers);
+            if (!commentDTOs.isEmpty()) {
+                postDTO.setComments(commentDTOs);
+            }
         }
         return postDTO;
     }
 
-    public List<PostDTO> getAllPosts(Long currentUserId) {
-        List<Post> posts = postRepository.findAll();
+    // Aplicando paginación
+    public List<PostDTO> getAllPosts(Long currentUserId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Post> postsPage = postRepository.findAllByOrderByFechaPublicacionDesc(pageable);
+        List<Post> posts = postsPage.getContent();
+
         if (posts.isEmpty()) {
             return List.of();
         }
-
         List<Long> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
-
         List<Post> postsWithTags = postRepository.findAllByIdWithTags(postIds);
         Map<Long, Post> postMap = postsWithTags.stream()
                 .collect(Collectors.toMap(Post::getId, post -> post));
-        long tagsEndTime = System.currentTimeMillis();
 
         List<Long> userIds = posts.stream().map(post -> post.getUser().getId()).distinct().collect(Collectors.toList());
         Map<Long, User> batchUsers = userRepository.findAllByIdWithInterests(userIds).stream()
                 .collect(Collectors.toMap(User::getId, user -> user));
-        long batchUsersEndTime = System.currentTimeMillis();
 
         Map<Long, Map<String, Long>> batchReactionCounts = reactionService.getReactionsCountForMultipleTargets(postIds, TargetType.POST);
-
         Map<Long, String> batchUserReactions;
         if (currentUserId != null) {
-            long batchUserReactionsStartTime = System.currentTimeMillis();
             batchUserReactions = reactionService.getUserReactionsForMultipleTargets(currentUserId, postIds, TargetType.POST);
-            long batchUserReactionsEndTime = System.currentTimeMillis();
         } else {
             batchUserReactions = null;
         }
 
-        long conversionStartTime = System.currentTimeMillis();
+        Map<Long, List<CommentDTO>> batchComments = commentService.getCommentsByMultiplePostIds(postIds, currentUserId, batchUsers);
         List<PostDTO> postDTOs = posts.stream()
                 .map(post -> {
                     // Usar el post con tags cargados
                     Post postWithTags = postMap.get(post.getId());
                     return convertToDto(postWithTags != null ? postWithTags : post,
-                            currentUserId, batchReactionCounts, batchUserReactions, batchUsers);
+                            currentUserId, batchReactionCounts, batchUserReactions, batchUsers, batchComments);
                 })
                 .collect(Collectors.toList());
         return postDTOs;
+    }
+
+    // Método original sin paginación
+    public List<PostDTO> getAllPosts(Long currentUserId) {
+        return getAllPosts(currentUserId, 0, Integer.MAX_VALUE);
     }
 
     public Optional<PostDTO> getPostById(Long id, Long currentUserId) {
@@ -168,9 +173,7 @@ public class PostService {
         }
 
         Post post = postOptional.get();
-
-        // Para un solo post, usar métodos individuales (más eficiente)
-        Optional<PostDTO> result = Optional.of(convertToDto(post, currentUserId, null, null, null));
+        Optional<PostDTO> result = Optional.of(convertToDto(post, currentUserId, null, null, null, null));
 
         return result;
     }
@@ -195,10 +198,8 @@ public class PostService {
         existingPost.setUltimaActualizacion(OffsetDateTime.now());
 
         Post updatedPost = postRepository.save(existingPost);
-
-        PostDTO postDTO = convertToDto(updatedPost, null, null, null, null);
+        PostDTO postDTO = convertToDto(updatedPost, null, null, null, null, null);
         webSocketMessageController.notifyPostUpdate(postDTO);
-
         return updatedPost;
     }
 
@@ -208,12 +209,14 @@ public class PostService {
         }
 
         webSocketMessageController.notifyPostDelete(id);
-
         postRepository.deleteById(id);
     }
 
-    public List<PostDTO> getPostsByUserId(Long userId, Long currentUserId) {
-        List<Post> posts = postRepository.findByUser_Id(userId);
+    // Método actualizado con paginación para posts por usuario
+    public List<PostDTO> getPostsByUserId(Long userId, Long currentUserId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Post> postsPage = postRepository.findByUser_IdOrderByFechaPublicacionDesc(userId, pageable);
+        List<Post> posts = postsPage.getContent();
 
         if (posts.isEmpty()) {
             return List.of();
@@ -231,9 +234,15 @@ public class PostService {
         Map<Long, String> batchUserReactions = currentUserId != null ?
                 reactionService.getUserReactionsForMultipleTargets(currentUserId, postIds, TargetType.POST) : null;
 
+        Map<Long, List<CommentDTO>> batchComments = commentService.getCommentsByMultiplePostIds(postIds, currentUserId, batchUsers);
+
         List<PostDTO> result = posts.stream()
-                .map(post -> convertToDto(post, currentUserId, batchReactionCounts, batchUserReactions, batchUsers))
+                .map(post -> convertToDto(post, currentUserId, batchReactionCounts, batchUserReactions, batchUsers, batchComments))
                 .collect(Collectors.toList());
         return result;
+    }
+
+    public List<PostDTO> getPostsByUserId(Long userId, Long currentUserId) {
+        return getPostsByUserId(userId, currentUserId, 0, Integer.MAX_VALUE);
     }
 }

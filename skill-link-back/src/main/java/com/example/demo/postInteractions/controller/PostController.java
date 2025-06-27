@@ -24,9 +24,13 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PostDTO>> getAllPosts(@RequestParam(value = "currentUserId", required = false) Long currentUserId) {
-        // El PostService ya devuelve List<PostDTO> y maneja la conversión y reacciones.
-        List<PostDTO> posts = postService.getAllPosts(currentUserId);
+    public ResponseEntity<List<PostDTO>> getAllPosts(
+            @RequestParam(value = "currentUserId", required = false) Long currentUserId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "5") int size) {
+
+        // El PostService ahora maneja la paginación y devuelve List<PostDTO> con conversión y reacciones.
+        List<PostDTO> posts = postService.getAllPosts(currentUserId, page, size);
         return ResponseEntity.ok(posts);
     }
 
@@ -40,12 +44,16 @@ public class PostController {
     }
 
     @GetMapping("/byUser/{userId}")
-    public ResponseEntity<List<PostDTO>> getPostsByUserId(@PathVariable Long userId,
-                                                          @RequestParam(value = "currentUserId", required = false) Long currentUserId) {
-        // El PostService ya devuelve List<PostDTO>
-        List<PostDTO> posts = postService.getPostsByUserId(userId, currentUserId);
+    public ResponseEntity<List<PostDTO>> getPostsByUserId(
+            @PathVariable Long userId,
+            @RequestParam(value = "currentUserId", required = false) Long currentUserId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "5") int size) {
+
+        // El PostService ahora maneja la paginación para posts por usuario
+        List<PostDTO> posts = postService.getPostsByUserId(userId, currentUserId, page, size);
         if (posts.isEmpty()) {
-            return ResponseEntity.notFound().build(); // O ResponseEntity.ok(List.of()) si quieres devolver una lista vacía
+            return ResponseEntity.ok(List.of()); // Devolver lista vacía en lugar de 404
         }
         return ResponseEntity.ok(posts);
     }
