@@ -2,6 +2,7 @@ package com.example.demo.postInteractions.service;
 
 import com.example.demo.postInteractions.controller.WebSocketMessageController;
 import com.example.demo.postInteractions.dto.CommentDTO;
+import com.example.demo.postInteractions.dto.UserDTO;
 import com.example.demo.postInteractions.model.Comment;
 import com.example.demo.postInteractions.model.Post;
 import com.example.demo.postInteractions.model.TargetType;
@@ -13,13 +14,8 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime; // ✅ AGREGAR: Para OffsetDateTime
-import java.time.ZoneOffset;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.OffsetDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,44 +40,99 @@ public class CommentService {
         this.reactionService = reactionService;
     }
 
-    private CommentDTO convertToDto(Comment comment, Long currentUserId) {
+    private CommentDTO convertToDto(Comment comment, Long currentUserId,
+                                    Map<Long, Map<String, Long>> batchReactionCounts,
+                                    Map<Long, String> batchUserReactions,
+                                    Map<Long, User> batchUsers) {
+        long startTime = System.currentTimeMillis();
+
         if (comment == null) {
             return null;
         }
 
-        CommentDTO commentDTO = new CommentDTO(comment);
+        CommentDTO commentDTO = new CommentDTO();
+        commentDTO.setId(comment.getId().toString());
+        commentDTO.setContent(comment.getContenido());
+        commentDTO.setCreatedAt(comment.getFechaComentario());
 
-        // Solo agregar reacciones si hay alguna
-        Map<String, Long> reactionsLong = reactionService.getReactionsCountForTarget(comment.getId(), TargetType.COMMENT);
-
-        // Filtrar solo las reacciones que tienen conteo > 0
-        Map<String, Integer> reactionsWithCounts = reactionsLong.entrySet().stream()
-                .filter(entry -> entry.getValue() > 0) // Solo las que tienen conteo
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().intValue()));
-
-        // Solo setear si hay reacciones
-        if (!reactionsWithCounts.isEmpty()) {
-            commentDTO.setReactions(reactionsWithCounts);
+        if (batchUsers != null && batchUsers.containsKey(comment.getUser().getId())) {
+            User user = batchUsers.get(comment.getUser().getId());
+            commentDTO.setAuthor(new UserDTO(user));
+        } else {
+            commentDTO.setAuthor(new UserDTO(comment.getUser()));
         }
 
-        // OPTIMIZACIÓN: Solo agregar userReaction si existe
-        if (currentUserId != null) {
-            String userReaction = reactionService.getUserReactionForTarget(currentUserId, comment.getId(), TargetType.COMMENT);
-            if (userReaction != null) { // Solo setear si no es null
-                commentDTO.setUserReaction(userReaction);
+        if (comment.getParentComment() != null) {
+            commentDTO.setParentCommentId(comment.getParentComment().getId().toString());
+        }
+        long reactionStartTime = System.currentTimeMillis();
+
+        if (batchReactionCounts != null && batchReactionCounts.containsKey(comment.getId())) {
+            Map<String, Long> reactionsLong = batchReactionCounts.get(comment.getId());
+            Map<String, Integer> reactionsWithCounts = reactionsLong.entrySet().stream()
+                    .filter(entry -> entry.getValue() > 0)
+                    .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().intValue()));
+
+            if (!reactionsWithCounts.isEmpty()) {
+                commentDTO.setReactions(reactionsWithCounts);
+            }
+        } else {
+            Map<String, Long> reactionsLong = reactionService.getReactionsCountForTarget(comment.getId(), TargetType.COMMENT);
+            Map<String, Integer> reactionsWithCounts = reactionsLong.entrySet().stream()
+                    .filter(entry -> entry.getValue() > 0)
+                    .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().intValue()));
+
+            if (!reactionsWithCounts.isEmpty()) {
+                commentDTO.setReactions(reactionsWithCounts);
             }
         }
 
-        // Llenar las respuestas (recursivamente)
-        if (comment.getReplies() != null && !comment.getReplies().isEmpty()) {
-            List<CommentDTO> repliesDTO = comment.getReplies().stream()
-                    .sorted(Comparator.comparing(Comment::getFechaComentario))
-                    .map(reply -> convertToDto(reply, currentUserId))
-                    .collect(Collectors.toList());
-            commentDTO.setReplies(repliesDTO);
+        if (currentUserId != null) {
+            long userReactionStartTime = System.currentTimeMillis();
+
+            if (batchUserReactions != null) {
+                String userReaction = batchUserReactions.get(comment.getId());
+                if (userReaction != null) {
+                    commentDTO.setUserReaction(userReaction);
+                }
+                System.out.println("    👤 [COMMENT-" + comment.getId() + "] User reaction: " + (System.currentTimeMillis() - userReactionStartTime) + "ms (BATCH)");
+            } else {
+                String userReaction = reactionService.getUserReactionForTarget(currentUserId, comment.getId(), TargetType.COMMENT);
+                if (userReaction != null) {
+                    commentDTO.setUserReaction(userReaction);
+                }
+                System.out.println("    👤 [COMMENT-" + comment.getId() + "] User reaction: " + (System.currentTimeMillis() - userReactionStartTime) + "ms (INDIVIDUAL)");
+            }
         }
 
+        if (comment.getReplies() != null && !comment.getReplies().isEmpty()) {
+            long repliesStartTime = System.currentTimeMillis();
+            List<CommentDTO> repliesDTO = comment.getReplies().stream()
+                    .sorted(Comparator.comparing(Comment::getFechaComentario))
+                    .map(reply -> convertToDto(reply, currentUserId, batchReactionCounts, batchUserReactions, batchUsers))
+                    .collect(Collectors.toList());
+            commentDTO.setReplies(repliesDTO);
+            long repliesEndTime = System.currentTimeMillis();
+        }
         return commentDTO;
+    }
+
+    private void collectAllCommentIds(List<Comment> comments, Set<Long> allIds) {
+        for (Comment comment : comments) {
+            allIds.add(comment.getId());
+            if (comment.getReplies() != null && !comment.getReplies().isEmpty()) {
+                collectAllCommentIds(new ArrayList<>(comment.getReplies()), allIds);
+            }
+        }
+    }
+
+    private void collectAllUserIds(List<Comment> comments, Set<Long> allUserIds) {
+        for (Comment comment : comments) {
+            allUserIds.add(comment.getUser().getId());
+            if (comment.getReplies() != null && !comment.getReplies().isEmpty()) {
+                collectAllUserIds(new ArrayList<>(comment.getReplies()), allUserIds);
+            }
+        }
     }
 
     public Comment createComment(Comment comment, Long userId, Long postId, Long parentCommentId) {
@@ -92,7 +143,6 @@ public class CommentService {
 
         comment.setUser(user);
         comment.setPost(post);
-        // ✅ CORREGIDO: Usar OffsetDateTime.now() directamente
         comment.setFechaComentario(OffsetDateTime.now());
         comment.setUltimaActualizacion(OffsetDateTime.now());
 
@@ -103,14 +153,11 @@ public class CommentService {
         }
 
         Comment savedComment = commentRepository.save(comment);
-
-        // OPTIMIZADO: Crear DTO más limpio para WebSocket
         CommentDTO commentDTO = new CommentDTO(savedComment);
 
-        // Mapear respuestas si existen (para un nuevo comentario, esto será vacío)
         if (savedComment.getReplies() != null && !savedComment.getReplies().isEmpty()) {
             commentDTO.setReplies(savedComment.getReplies().stream()
-                    .map(reply -> convertToDto(reply, userId))
+                    .map(reply -> convertToDto(reply, userId, null, null, null))
                     .collect(Collectors.toList()));
         }
 
@@ -120,25 +167,97 @@ public class CommentService {
     }
 
     public List<CommentDTO> getCommentsByPostId(Long postId, Long currentUserId) {
-        List<Comment> topLevelComments = commentRepository.findByPost_IdAndParentCommentIsNullOrderByFechaComentarioAsc(postId);
-        return topLevelComments.stream()
-                .map(comment -> convertToDto(comment, currentUserId))
+        return getCommentsByPostId(postId, currentUserId, null);
+    }
+
+    public List<CommentDTO> getCommentsByPostId(Long postId, Long currentUserId, Map<Long, User> batchUsers) {
+        long startTime = System.currentTimeMillis();
+        System.out.println("  💬 [POST-" + postId + "] Cargando comentarios...");
+
+        List<Comment> topLevelComments = commentRepository.findTopLevelCommentsWithReplies(postId);
+
+        if (topLevelComments.isEmpty()) {
+            return List.of();
+        }
+
+        long collectStartTime = System.currentTimeMillis();
+        Set<Long> allCommentIds = new HashSet<>();
+        collectAllCommentIds(topLevelComments, allCommentIds);
+        long collectEndTime = System.currentTimeMillis();
+
+        Map<Long, User> commentBatchUsers = batchUsers;
+        if (commentBatchUsers == null) {
+            long batchUsersStartTime = System.currentTimeMillis();
+            Set<Long> allUserIds = new HashSet<>();
+            collectAllUserIds(topLevelComments, allUserIds);
+            commentBatchUsers = userRepository.findAllByIdWithInterests(new ArrayList<>(allUserIds)).stream()
+                    .collect(Collectors.toMap(User::getId, user -> user));
+            long batchUsersEndTime = System.currentTimeMillis();
+        }
+
+        long batchReactionsStartTime = System.currentTimeMillis();
+        Map<Long, Map<String, Long>> batchReactionCounts = reactionService.getReactionsCountForMultipleTargets(
+                new ArrayList<>(allCommentIds), TargetType.COMMENT);
+        long batchReactionsEndTime = System.currentTimeMillis();
+
+        Map<Long, String> batchUserReactions;
+        if (currentUserId != null) {
+            long batchUserReactionsStartTime = System.currentTimeMillis();
+            batchUserReactions = reactionService.getUserReactionsForMultipleTargets(
+                    currentUserId, new ArrayList<>(allCommentIds), TargetType.COMMENT);
+            long batchUserReactionsEndTime = System.currentTimeMillis();
+        } else {
+            batchUserReactions = null;
+        }
+
+        long conversionStartTime = System.currentTimeMillis();
+        Map<Long, User> finalCommentBatchUsers = commentBatchUsers;
+        List<CommentDTO> result = topLevelComments.stream()
+                .map(comment -> convertToDto(comment, currentUserId, batchReactionCounts, batchUserReactions, finalCommentBatchUsers))
                 .collect(Collectors.toList());
+        long conversionEndTime = System.currentTimeMillis();
+        return result;
     }
 
     public List<CommentDTO> getRepliesByParentCommentId(Long parentCommentId, Long currentUserId) {
         List<Comment> replies = commentRepository.findByParentComment_IdOrderByFechaComentarioAsc(parentCommentId);
+
+        if (replies.isEmpty()) {
+            return List.of();
+        }
+
+        // Para respuestas individuales, usar batch loading también
+        Set<Long> allReplyIds = new HashSet<>();
+        collectAllCommentIds(replies, allReplyIds);
+
+        Set<Long> allUserIds = new HashSet<>();
+        collectAllUserIds(replies, allUserIds);
+        Map<Long, User> batchUsers = userRepository.findAllByIdWithInterests(new ArrayList<>(allUserIds)).stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+
+        Map<Long, Map<String, Long>> batchReactionCounts = reactionService.getReactionsCountForMultipleTargets(
+                new ArrayList<>(allReplyIds), TargetType.COMMENT);
+
+        Map<Long, String> batchUserReactions = currentUserId != null ?
+                reactionService.getUserReactionsForMultipleTargets(
+                        currentUserId, new ArrayList<>(allReplyIds), TargetType.COMMENT) : null;
+
         return replies.stream()
-                .map(reply -> convertToDto(reply, currentUserId))
+                .map(reply -> convertToDto(reply, currentUserId, batchReactionCounts, batchUserReactions, batchUsers))
                 .collect(Collectors.toList());
     }
 
     public Optional<CommentDTO> getCommentById(Long id, Long currentUserId) {
         Optional<Comment> commentOptional = commentRepository.findById(id);
-        return commentOptional.map(comment -> convertToDto(comment, currentUserId));
+        if (commentOptional.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // Para un comentario individual, usar métodos individuales (más eficiente)
+        Comment comment = commentOptional.get();
+        return Optional.of(convertToDto(comment, currentUserId, null, null, null));
     }
 
-    // Método para actualizar comentarios
     public Comment updateComment(Long id, Comment commentDetails) {
         Comment existingComment = commentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Comentario no encontrado con ID: " + id));
@@ -148,8 +267,7 @@ public class CommentService {
 
         Comment updatedComment = commentRepository.save(existingComment);
 
-        // Notificar actualización vía WebSocket
-        CommentDTO commentDTO = convertToDto(updatedComment, null);
+        CommentDTO commentDTO = convertToDto(updatedComment, null, null, null, null);
         webSocketMessageController.notifyCommentUpdate(commentDTO);
 
         return updatedComment;
@@ -159,10 +277,7 @@ public class CommentService {
         if (!commentRepository.existsById(id)) {
             throw new EntityNotFoundException("Comentario no encontrado con ID: " + id);
         }
-
-        // Notificar eliminación vía WebSocket ANTES de eliminar
         webSocketMessageController.notifyCommentDelete(id);
-
         commentRepository.deleteById(id);
     }
 }

@@ -50,7 +50,7 @@ public class User implements UserDetails {
     @Column(name = "activo")
     private boolean active = true;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "usuario_intereses", joinColumns = @JoinColumn(name = "usuario_id"))
     @Column(name = "interes", nullable = false)
     @Enumerated(EnumType.STRING)
