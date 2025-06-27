@@ -43,14 +43,6 @@ const PostCard: React.FC<PostCardProps> = ({
     console.log('Post editado exitosamente');
   };
 
-  console.log(`🔄 Renderizando PostCard ${post.id}:`, {
-    userReaction: post.userReaction,
-    reactions: post.reactions,
-    _lastUpdate: post._lastUpdate,
-    hasOnNewComment: !!onNewComment,
-    currentUserId,
-    authorId: post.author.id
-  });
 
   return (
     <>

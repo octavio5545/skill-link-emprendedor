@@ -2,9 +2,15 @@ import type { Post } from '../../types/post';
 
 const API_BASE_URL = 'https://skill-link-emprendedor-pjof.onrender.com/api';
 
-export const fetchPosts = async (currentUserId: string | null): Promise<Post[]> => {
-  const userIdParam = currentUserId ? `?currentUserId=${currentUserId}` : '';
-  const response = await fetch(`${API_BASE_URL}/posts${userIdParam}`);
+export const fetchPosts = async (
+  currentUserId: string | null, 
+  page: number = 0, 
+  size: number = 5
+): Promise<Post[]> => {
+  const userIdParam = currentUserId ? `currentUserId=${currentUserId}&` : '';
+  const response = await fetch(
+    `${API_BASE_URL}/posts?${userIdParam}page=${page}&size=${size}`
+  );
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);

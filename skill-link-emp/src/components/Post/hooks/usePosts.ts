@@ -25,6 +25,9 @@ interface UsePostsReturn {
   handleReaction: (postId: string, reactionType: string) => Promise<void>;
   handleCommentReaction: (commentId: string, reactionType: string) => Promise<void>;
   handleNewComment: (postId: string, content: string, parentCommentId?: string) => Promise<void>;
+  loadMorePosts: () => Promise<void>;
+  hasMore: boolean;
+  loadingMore: boolean;
 }
 
 export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => {
@@ -32,6 +35,10 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const { shouldRefresh, markAsRefreshed } = usePostsContext();
 
@@ -126,16 +133,19 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
     return user;
   }, []);
 
-  // Función para cargar posts
-  const loadPosts = useCallback(async () => {
-    if (!hasInitialLoad) {
+  const loadPosts = useCallback(async (pageToLoad: number = 0, isLoadMore: boolean = false) => {
+    if (!isLoadMore && !hasInitialLoad) {
       setLoading(true);
+    }
+    
+    if (isLoadMore) {
+      setLoadingMore(true);
     }
     
     setError(null);
     
     try {
-      const data = await fetchPosts(currentUserId);
+      const data = await fetchPosts(currentUserId, pageToLoad, 5);
       const normalizedPosts: Post[] = data.map(post => {
         const parsedPost = parsePostDates(post);
         parsedPost.author = ensureUserHasAvatar(parsedPost.author);
@@ -151,7 +161,24 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
         
         return parsedPost;
       });
-      setPosts(normalizedPosts);
+
+      const hasMorePosts = normalizedPosts.length === 5; // Si recibimos menos de 5, no hay más
+      setHasMore(hasMorePosts);
+
+      if (isLoadMore) {
+        // Agregar posts a la lista existente
+        setPosts(prevPosts => {
+          // Evitar duplicados
+          const existingIds = new Set(prevPosts.map(p => p.id));
+          const newPosts = normalizedPosts.filter(p => !existingIds.has(p.id));
+          return [...prevPosts, ...newPosts];
+        });
+        console.log(`✅ Agregados ${normalizedPosts.length} posts más`);
+      } else {
+        setPosts(normalizedPosts);
+        setPage(0); // Reset page
+      }
+
       if (!hasInitialLoad) {
         setHasInitialLoad(true);
       }
@@ -161,10 +188,27 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
       
     } catch (err: any) {
       setError("No se pudieron cargar los posts. Intenta de nuevo más tarde.");
+      console.error('Error cargando posts:', err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   }, [currentUserId, ensureUserHasAvatar, hasInitialLoad, shouldRefresh, markAsRefreshed]);
+
+  const loadMorePosts = useCallback(async () => {
+    if (loadingMore || !hasMore) {
+      return;
+    }
+
+    const nextPage = page + 1;
+    await loadPosts(nextPage, true);
+    setPage(nextPage);
+  }, [page, loadingMore, hasMore, loadPosts]);
+
+  // Función original para compatibilidad
+  const fetchPostsOriginal = useCallback(async () => {
+    await loadPosts(0, false);
+  }, [loadPosts]);
 
   const handleNewComment = useCallback(async (
     postId: string, 
@@ -442,7 +486,6 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
       setPosts((prevPosts: Post[]) => {
         return prevPosts.map((post: Post) => {
           if (post.id === reactionNotification.targetId) {
-            // Solo actualizar si los datos del WebSocket son diferentes a los optimistas
             const hasOptimisticUpdate = post._lastUpdate && (Date.now() - post._lastUpdate) < 5000;
             
             if (hasOptimisticUpdate) {
@@ -473,7 +516,6 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
       setPosts((prevPosts: Post[]) => {
         const timestamp = Date.now();
         return prevPosts.map((post: Post) => {
-          // Solo actualizar si no hay actualización optimista reciente
           const hasOptimisticUpdate = post._lastUpdate && (timestamp - post._lastUpdate) < 5000;
           
           if (hasOptimisticUpdate) {
@@ -507,7 +549,7 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
 
   useEffect(() => {
     if (!hasInitialLoad || shouldRefresh) {
-      loadPosts();
+      loadPosts(0, false);
     }
   }, [loadPosts, hasInitialLoad, shouldRefresh]);
 
@@ -515,9 +557,12 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
     posts, 
     loading, 
     error, 
-    fetchPosts: loadPosts, 
+    fetchPosts: fetchPostsOriginal, 
     handleReaction: handlePostReaction,
     handleCommentReaction,
-    handleNewComment
+    handleNewComment,
+    loadMorePosts,
+    hasMore,
+    loadingMore
   };
 };

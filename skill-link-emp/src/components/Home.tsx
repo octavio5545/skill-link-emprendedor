@@ -1,4 +1,3 @@
-import { mockPosts } from "../data/mockData";
 import  PostCard  from "./Post/components/post/PostCard";
 import { ProfileCard } from "./Home/ProfileCard";
 import { Filter, Plus, Search, Tag, TrendingUp } from "lucide-react";
@@ -9,6 +8,7 @@ import { FilterTag } from "./Home/FilterTag";
 import { filterPosts, getAllTags } from "../utils/post";
 import { useNavigate } from "react-router-dom";
 import { usePosts } from './Post/hooks/usePosts';
+import { useInfiniteScroll } from './Post/hooks/useInfiniteScroll';
 
 interface HomeProps {
   selectedTag: string;
@@ -23,7 +23,10 @@ export const Home = ({ selectedTag, currentUserId }: HomeProps) => {
       fetchPosts, 
       handleReaction, 
       handleCommentReaction,
-      handleNewComment
+      handleNewComment,
+      loadMorePosts,
+      hasMore,
+      loadingMore
     } = usePosts({ currentUserId });
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -31,12 +34,19 @@ export const Home = ({ selectedTag, currentUserId }: HomeProps) => {
   let router = useNavigate()
   const allTags = useMemo(() => getAllTags(posts), [posts]);
 
-  console.log('🏠 Home - Current User ID:', currentUserId);
-  
   const filteredPosts = useMemo(() => 
     filterPosts(posts, searchTerm, selectedTags),
     [posts, searchTerm, selectedTags]
   );
+
+  const shouldUseInfiniteScroll = !searchTerm && selectedTags.length === 0;
+  
+  useInfiniteScroll({
+    hasMore: shouldUseInfiniteScroll && hasMore,
+    loading: loadingMore,
+    onLoadMore: loadMorePosts,
+    threshold: 300
+  });
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags(prev =>
@@ -122,9 +132,7 @@ export const Home = ({ selectedTag, currentUserId }: HomeProps) => {
             </div>
           </aside>
 
-          {/* Posts Feed */}
           <div className="lg:col-span-3">
-            {/* Search Results Info */}
             {(searchTerm || selectedTags.length > 0) && (
               <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
                 <p className="text-sm text-blue-800">
@@ -143,7 +151,6 @@ export const Home = ({ selectedTag, currentUserId }: HomeProps) => {
               </div>
             )}
 
-            {/* Posts */}
             <div className="space-y-6">
               {loading ? (
                 <div className="text-center py-16">
@@ -188,16 +195,44 @@ export const Home = ({ selectedTag, currentUserId }: HomeProps) => {
                   )}
                 </div>
               ) : (
-                filteredPosts.map((post) => (
-                  <PostCard
-                    key={post.id}
-                    post={post}
-                    currentUserId={currentUserId}
-                    onReaction={handleReaction}
-                    onCommentReaction={handleCommentReaction}
-                    onNewComment={handleNewComment}
-                  />
-                ))
+                <>
+                  {filteredPosts.map((post) => (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      currentUserId={currentUserId}
+                      onReaction={handleReaction}
+                      onCommentReaction={handleCommentReaction}
+                      onNewComment={handleNewComment}
+                    />
+                  ))}
+
+                  {shouldUseInfiniteScroll && (
+                    <div className="text-center py-8">
+                      {loadingMore ? (
+                        <div className="flex flex-col items-center space-y-4">
+                          <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <p className="text-white/70 text-sm font-medium">Cargando más posts...</p>
+                        </div>
+                      ) : hasMore ? (
+                        <button 
+                          onClick={loadMorePosts}
+                          className="px-6 py-3 bg-white/10 backdrop-blur-md text-white rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-200 font-medium"
+                        >
+                          Cargar más posts
+                        </button>
+                      ) : posts.length > 0 ? (
+                        <div className="flex flex-col items-center space-y-2">
+                          <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center">
+                            <TrendingUp className="h-6 w-6 text-white/60" />
+                          </div>
+                          <p className="text-white/70 text-sm font-medium">¡Has visto todos los posts!</p>
+                          <p className="text-white/50 text-xs">Vuelve más tarde para ver contenido nuevo</p>
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
