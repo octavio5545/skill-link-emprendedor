@@ -34,7 +34,86 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
   const { shouldRefresh, markAsRefreshed } = usePostsContext();
-  const { handlePostReaction, handleCommentReaction } = useReactions({ currentUserId });
+
+  const handleOptimisticPostReaction = useCallback((postId: string, reactionType: string) => {
+    setPosts(prevPosts => {
+      return prevPosts.map(post => {
+        if (post.id === postId) {
+          const newReactions = { ...post.reactions };
+          const currentUserReaction = post.userReaction;
+          
+          // Si el usuario ya tenía una reacción, la quitamos
+          if (currentUserReaction) {
+            newReactions[currentUserReaction] = Math.max(0, (newReactions[currentUserReaction] || 0) - 1);
+          }
+          
+          // Si es la misma reacción, la quitamos (toggle)
+          const newUserReaction = currentUserReaction === reactionType ? null : reactionType;
+          
+          // Si es una nueva reacción, la agregamos
+          if (newUserReaction) {
+            newReactions[newUserReaction] = (newReactions[newUserReaction] || 0) + 1;
+          }
+                    
+          return {
+            ...post,
+            reactions: newReactions,
+            userReaction: newUserReaction,
+            _lastUpdate: Date.now()
+          };
+        }
+        return post;
+      });
+    });
+  }, []);
+
+  const handleOptimisticCommentReaction = useCallback((commentId: string, reactionType: string) => {
+    setPosts(prevPosts => {
+      return prevPosts.map(post => {
+        const updateCommentOptimistic = (comments: Comment[]): Comment[] => {
+          return comments.map(comment => {
+            if (comment.id === commentId) {
+              const newReactions = { ...comment.reactions };
+              const currentUserReaction = comment.userReaction;
+              if (currentUserReaction) {
+                newReactions[currentUserReaction] = Math.max(0, (newReactions[currentUserReaction] || 0) - 1);
+              }
+              const newUserReaction = currentUserReaction === reactionType ? null : reactionType;
+              if (newUserReaction) {
+                newReactions[newUserReaction] = (newReactions[newUserReaction] || 0) + 1;
+              }              
+              return {
+                ...comment,
+                reactions: newReactions,
+                userReaction: newUserReaction
+              };
+            }
+            
+            if (comment.replies && comment.replies.length > 0) {
+              return {
+                ...comment,
+                replies: updateCommentOptimistic(comment.replies)
+              };
+            }
+            
+            return comment;
+          });
+        };
+        
+        return {
+          ...post,
+          comments: updateCommentOptimistic(post.comments),
+          _lastUpdate: Date.now()
+        };
+      });
+    });
+  }, []);
+
+  const { handlePostReaction, handleCommentReaction } = useReactions({ 
+    currentUserId,
+    onOptimisticPostReaction: handleOptimisticPostReaction,
+    onOptimisticCommentReaction: handleOptimisticCommentReaction
+  });
 
   // Función para asegurar que los usuarios tengan avatares
   const ensureUserHasAvatar = useCallback((user: any) => {
@@ -97,17 +176,24 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
       throw new Error('Debes estar logueado para comentar');
     }
 
-    try {
-      const newCommentDTO = await createComment(content, postId, currentUserId, parentCommentId);
-      const newComment: Comment = {
-        id: newCommentDTO.id,
-        author: ensureUserHasAvatar(newCommentDTO.author),
-        content: newCommentDTO.content,
-        createdAt: new Date(newCommentDTO.createdAt),
-        reactions: newCommentDTO.reactions || {},
-        userReaction: newCommentDTO.userReaction || null,
-        replies: newCommentDTO.replies || []
-      };
+    const optimisticComment: Comment = {
+      id: `temp-${Date.now()}`,
+      author: {
+        id: currentUserId,
+        name: 'Usuario Actual',
+        avatar: getUserAvatar(currentUserId),
+        title: 'Emprendedor'
+      },
+      content,
+      createdAt: new Date(),
+      reactions: {},
+      userReaction: null,
+      replies: [],
+      postId,
+      parentCommentId
+    };
+
+    setTimeout(() => {
       setPosts(prevPosts => {
         return prevPosts.map(post => {
           if (post.id === postId) {
@@ -117,7 +203,7 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
                   if (comment.id === parentCommentId) {
                     return {
                       ...comment,
-                      replies: [...(comment.replies || []), newComment]
+                      replies: [...(comment.replies || []), optimisticComment]
                     };
                   } else if (comment.replies && comment.replies.length > 0) {
                     return {
@@ -136,7 +222,62 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
             } else {
               return {
                 ...post,
-                comments: [...post.comments, newComment]
+                comments: [...post.comments, optimisticComment]
+              };
+            }
+          }
+          return post;
+        });
+      });
+    }, 300);
+
+    try {
+      const newCommentDTO = await createComment(content, postId, currentUserId, parentCommentId);
+      const realComment: Comment = {
+        id: newCommentDTO.id,
+        author: ensureUserHasAvatar(newCommentDTO.author),
+        content: newCommentDTO.content,
+        createdAt: new Date(newCommentDTO.createdAt),
+        reactions: newCommentDTO.reactions || {},
+        userReaction: newCommentDTO.userReaction || null,
+        replies: newCommentDTO.replies || []
+      };
+
+      setPosts(prevPosts => {
+        return prevPosts.map(post => {
+          if (post.id === postId) {
+            if (parentCommentId) {
+              const replaceInReplies = (comments: Comment[]): Comment[] => {
+                return comments.map(comment => {
+                  if (comment.id === parentCommentId) {
+                    const updatedReplies = (comment.replies || []).map(reply => 
+                      reply.id === optimisticComment.id ? realComment : reply
+                    );
+                    return {
+                      ...comment,
+                      replies: updatedReplies
+                    };
+                  } else if (comment.replies && comment.replies.length > 0) {
+                    return {
+                      ...comment,
+                      replies: replaceInReplies(comment.replies)
+                    };
+                  }
+                  return comment;
+                });
+              };
+              
+              return {
+                ...post,
+                comments: replaceInReplies(post.comments)
+              };
+            } else {
+              const updatedComments = post.comments.map(comment => 
+                comment.id === optimisticComment.id ? realComment : comment
+              );
+              return {
+                ...post,
+                comments: updatedComments
               };
             }
           }
@@ -145,6 +286,43 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
       });
 
     } catch (error) {
+      setPosts(prevPosts => {
+        return prevPosts.map(post => {
+          if (post.id === postId) {
+            if (parentCommentId) {
+              const removeFromReplies = (comments: Comment[]): Comment[] => {
+                return comments.map(comment => {
+                  if (comment.id === parentCommentId) {
+                    return {
+                      ...comment,
+                      replies: (comment.replies || []).filter(reply => reply.id !== optimisticComment.id)
+                    };
+                  } else if (comment.replies && comment.replies.length > 0) {
+                    return {
+                      ...comment,
+                      replies: removeFromReplies(comment.replies)
+                    };
+                  }
+                  return comment;
+                });
+              };
+              
+              return {
+                ...post,
+                comments: removeFromReplies(post.comments)
+              };
+            } else {
+              return {
+                ...post,
+                comments: post.comments.filter(comment => comment.id !== optimisticComment.id)
+              };
+            }
+          }
+          return post;
+        });
+      });
+      
+      console.error('Error al crear comentario, removiendo optimista');
       throw error;
     }
   }, [currentUserId, ensureUserHasAvatar]);
@@ -154,7 +332,22 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
       ...newComment,
       author: ensureUserHasAvatar(newComment.author)
     };
-    setPosts(prevPosts => addCommentToPosts(prevPosts, commentWithAvatar));
+    
+    setPosts(prevPosts => {
+      const hasOptimisticComment = prevPosts.some(post => 
+        post.comments.some(comment => 
+          comment.content === commentWithAvatar.content && 
+          comment.author.id === commentWithAvatar.author.id &&
+          comment.id.startsWith('temp-')
+        )
+      );
+      
+      if (hasOptimisticComment) {
+        return prevPosts;
+      }
+      
+      return addCommentToPosts(prevPosts, commentWithAvatar);
+    });
   }, [ensureUserHasAvatar]);
 
   const handleCommentUpdateFromWS = useCallback((updatedComment: Comment) => {
@@ -249,6 +442,13 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
       setPosts((prevPosts: Post[]) => {
         return prevPosts.map((post: Post) => {
           if (post.id === reactionNotification.targetId) {
+            // Solo actualizar si los datos del WebSocket son diferentes a los optimistas
+            const hasOptimisticUpdate = post._lastUpdate && (Date.now() - post._lastUpdate) < 5000;
+            
+            if (hasOptimisticUpdate) {
+              return post;
+            }
+            
             return {
               ...post,
               reactions: { ...reactionNotification.reactionCounts },
@@ -273,6 +473,13 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
       setPosts((prevPosts: Post[]) => {
         const timestamp = Date.now();
         return prevPosts.map((post: Post) => {
+          // Solo actualizar si no hay actualización optimista reciente
+          const hasOptimisticUpdate = post._lastUpdate && (timestamp - post._lastUpdate) < 5000;
+          
+          if (hasOptimisticUpdate) {
+            return post;
+          }
+          
           const updatedPost = {
             ...post,
             comments: updateCommentReactionsRecursive(

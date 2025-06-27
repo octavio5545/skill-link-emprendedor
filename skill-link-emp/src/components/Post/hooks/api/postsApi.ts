@@ -2,7 +2,6 @@ import type { Post } from '../../types/post';
 
 const API_BASE_URL = 'https://skill-link-emprendedor-pjof.onrender.com/api';
 
-
 export const fetchPosts = async (currentUserId: string | null): Promise<Post[]> => {
   const userIdParam = currentUserId ? `?currentUserId=${currentUserId}` : '';
   const response = await fetch(`${API_BASE_URL}/posts${userIdParam}`);
@@ -19,7 +18,7 @@ export const fetchPosts = async (currentUserId: string | null): Promise<Post[]> 
     return dateB - dateA;
   });
 
-  console.log('📅 Posts ordenados por fecha:', sortedPosts.map((p: any) => ({
+  console.log('Posts ordenados por fecha:', sortedPosts.map((p: any) => ({
     id: p.id,
     title: p.title,
     createdAt: p.createdAt
@@ -162,7 +161,7 @@ export const updatePost = async (
 
 
 export const deletePost = async (postId: string): Promise<void> => {
-  console.log(`🚀 Eliminando post ${postId}`);
+  console.log(`Eliminando post ${postId}`);
 
   const response = await fetch(`${API_BASE_URL}/posts/${postId}`, {
     method: 'DELETE',

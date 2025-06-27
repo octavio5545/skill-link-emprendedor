@@ -12,9 +12,15 @@ const REACTION_TYPE_MAP: { [key: string]: number } = {
 
 interface UseReactionsOptions {
   currentUserId: string | null;
+  onOptimisticPostReaction?: (postId: string, reactionType: string) => void;
+  onOptimisticCommentReaction?: (commentId: string, reactionType: string) => void;
 }
 
-export const useReactions = ({ currentUserId }: UseReactionsOptions) => {
+export const useReactions = ({ 
+  currentUserId, 
+  onOptimisticPostReaction,
+  onOptimisticCommentReaction 
+}: UseReactionsOptions) => {
   const handlePostReaction = useCallback(async (postId: string, reactionType: string) => {
     const reactionTypeId = REACTION_TYPE_MAP[reactionType];
 
@@ -29,12 +35,16 @@ export const useReactions = ({ currentUserId }: UseReactionsOptions) => {
       return;
     }
 
+    if (onOptimisticPostReaction) {
+      onOptimisticPostReaction(postId, reactionType);
+    }
+
     try {
       await sendReaction(currentUserId, postId, 'POST', reactionType, reactionTypeId);
     } catch (error) {
-      console.error("Error al enviar la reacción al post:", error);
+      console.error("❌ Error al enviar la reacción al post:", error);
     }
-  }, [currentUserId]);
+  }, [currentUserId, onOptimisticPostReaction]);
 
   const handleCommentReaction = useCallback(async (commentId: string, reactionType: string) => {
     const reactionTypeId = REACTION_TYPE_MAP[reactionType];
@@ -50,12 +60,16 @@ export const useReactions = ({ currentUserId }: UseReactionsOptions) => {
       return;
     }
 
+    if (onOptimisticCommentReaction) {
+      onOptimisticCommentReaction(commentId, reactionType);
+    }
+
     try {
       await sendReaction(currentUserId, commentId, 'COMMENT', reactionType, reactionTypeId);
     } catch (error) {
-      console.error("Error al enviar la reacción al comentario:", error);
+      console.error("❌ Error al enviar la reacción al comentario:", error);
     }
-  }, [currentUserId]);
+  }, [currentUserId, onOptimisticCommentReaction]);
 
   const handleReaction = handlePostReaction;
 

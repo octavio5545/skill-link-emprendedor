@@ -31,7 +31,10 @@ const CommentForm: React.FC<CommentFormProps> = ({
       } catch (error) {
         console.error('Error al enviar comentario:', error);
       } finally {
-        setIsSubmitting(false);
+        // 🚀 Reducir tiempo de "enviando" ya que tenemos actualización optimista
+        setTimeout(() => {
+          setIsSubmitting(false);
+        }, 500); // Reducido de tiempo normal a 500ms
       }
     }
   };
