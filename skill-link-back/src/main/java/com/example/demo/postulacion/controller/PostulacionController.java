@@ -1,6 +1,7 @@
 package com.example.demo.postulacion.controller;
 
-import com.example.demo.postulacion.model.Postulacion;
+import com.example.demo.postulacion.dto.PostulacionesResponseDTO;
+import com.example.demo.postulacion.dto.PostulacionesRequestDTO;
 import com.example.demo.postulacion.service.PostulacionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -20,18 +21,18 @@ public class PostulacionController {
     }
 
     @GetMapping
-    public List<Postulacion> listar() {
+    public List<PostulacionesResponseDTO> listar() {
         return service.findAll();
     }
 
     @GetMapping("/{id}")
-    public Optional<Postulacion> obtener(@PathVariable Long id) {
+    public Optional<PostulacionesResponseDTO> obtener(@PathVariable Long id) {
         return service.findById(id);
     }
 
     @PostMapping
-    public Postulacion crear(@RequestBody Postulacion postulacion) {
-        return service.save(postulacion);
+    public PostulacionesResponseDTO crear(@RequestBody PostulacionesRequestDTO dto) {
+        return service.save(dto);
     }
 
     @DeleteMapping("/{id}")
