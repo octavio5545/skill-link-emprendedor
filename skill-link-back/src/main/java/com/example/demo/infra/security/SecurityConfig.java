@@ -34,41 +34,32 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        // Swagger
                         .requestMatchers("/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**", "/v3/api-docs/swagger-config", "/swagger-resources/**", "/webjars/**")
                         .permitAll()
 
-                        // CORS preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**")
                         .permitAll()
 
-                        // WEBSOCKET ENDPOINTS - Crítico para producción
                         .requestMatchers("/ws/**", "/ws-sockjs/**", "/app/**", "/topic/**", "/queue/**")
                         .permitAll()
 
-                        // Endpoints públicos de autenticación
                         .requestMatchers(HttpMethod.POST, "/usuarios/login", "/usuarios/register")
                         .permitAll()
 
-                        // Endpoints públicos de recuperación de contraseña
                         .requestMatchers(HttpMethod.POST, "/usuarios/recover-password", "/usuarios/reset-password")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/usuarios/validate-reset-token")
                         .permitAll()
 
-                        // CHAT ENDPOINTS - Temporalmente públicos para pruebas
                         .requestMatchers("/api/conversaciones/**", "/api/mensajes/**")
                         .permitAll()
 
-                        // POST ENDPOINTS - Temporalmente públicos para pruebas
                         .requestMatchers("/api/posts/**", "/api/comments/**", "/api/reactions/**")
-                        .permitAll()
+                        .authenticated()
 
-                        // Health check para Render
                         .requestMatchers(HttpMethod.GET, "/actuator/health", "/health")
                         .permitAll()
 
-                        // Todo lo demás requiere autenticación
                         .anyRequest().authenticated())
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

@@ -16,10 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,62 +52,43 @@ public class ChatService {
     }
 
     public Mensaje enviarMensaje(Long idConversacion, Long idEmisor, String contenido) {
-        System.out.println("ChatService: Guardando mensaje...");
-        System.out.println("Conversación: " + idConversacion + ", Emisor: " + idEmisor);
-
         Conversacion conversacion = conversacionRepository.findById(idConversacion)
                 .orElseThrow(() -> new RuntimeException("Conversación no encontrada"));
         User emisor = usuarioRepository.findById(idEmisor)
                 .orElseThrow(() -> new RuntimeException("Emisor no encontrado"));
-
-        System.out.println("Emisor encontrado: " + emisor.getName() + " (ID: " + emisor.getId() + ")");
 
         Mensaje mensaje = new Mensaje();
         mensaje.setContenido(contenido);
         mensaje.setConversacion(conversacion);
         mensaje.setEmisor(emisor);
         mensaje.setTimestampEnvio(LocalDateTime.now());
-
         Mensaje mensajeGuardado = mensajeRepository.save(mensaje);
 
         if (mensajeGuardado.getEmisor() == null) {
-            System.err.println("ERROR CRÍTICO: Mensaje guardado sin emisor!");
             throw new RuntimeException("Error: Mensaje guardado sin emisor");
         }
-
-        System.out.println("Mensaje guardado exitosamente con emisor: " + mensajeGuardado.getEmisor().getName());
         return mensajeGuardado;
     }
 
-    // Obtener últimos 20 mensajes (para optimizacion)
     public List<Mensaje> obtenerUltimosMensajes(Long idConversacion) {
         Conversacion conversacion = conversacionRepository.findById(idConversacion)
                 .orElseThrow(() -> new RuntimeException("Conversación no encontrada"));
 
         List<Mensaje> mensajes = mensajeRepository
-                .findTop20ByConversacionOrderByTimestampEnvioDesc(conversacion);
-
+                .findTop20ByConversacionWithEmisor(conversacion);
         mensajes.sort(Comparator.comparing(Mensaje::getTimestampEnvio));
         return mensajes;
     }
 
-    // Obtener mensajes con paginación
     public List<MensajeDTO> obtenerMensajesPaginados(Long idConversacion, int page, int size) {
-        System.out.println("ChatService: Obteniendo mensajes paginados - Conversación: " + idConversacion + ", Página: " + page + ", Tamaño: " + size);
-
         Conversacion conversacion = conversacionRepository.findById(idConversacion)
                 .orElseThrow(() -> new RuntimeException("Conversación no encontrada"));
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("timestampEnvio").descending());
-        Page<Mensaje> mensajesPage = mensajeRepository.findByConversacionOrderByTimestampEnvioDesc(conversacion, pageable);
-        System.out.println("Página obtenida - Total elementos: " + mensajesPage.getTotalElements() +
-                ", Elementos en página: " + mensajesPage.getNumberOfElements() +
-                ", Página actual: " + mensajesPage.getNumber() +
-                ", Total páginas: " + mensajesPage.getTotalPages());
-
+        Page<Mensaje> mensajesPage = mensajeRepository.findByConversacionWithEmisorOrderByTimestampEnvioDesc(conversacion, pageable);
         // Ordenar cronológicamente (más antiguos primero)
         List<MensajeDTO> mensajesDTO = mensajesPage.getContent().stream()
-                .sorted(Comparator.comparing(Mensaje::getTimestampEnvio)) // Orden cronológico para el frontend
+                .sorted(Comparator.comparing(Mensaje::getTimestampEnvio))
                 .map(mensaje -> new MensajeDTO(
                         mensaje.getId(),
                         mensaje.getContenido(),
@@ -121,15 +99,10 @@ public class ChatService {
                         mensaje.getEmisor().getEmail()
                 ))
                 .collect(Collectors.toList());
-
-        System.out.println("Mensajes DTO creados: " + mensajesDTO.size());
         return mensajesDTO;
     }
 
-    // Obtener mensajes DTO (para endpoint existente)
     public List<MensajeDTO> obtenerMensajesDTO(Long idConversacion) {
-        System.out.println("ChatService: Obteniendo mensajes DTO para conversación: " + idConversacion);
-
         List<Mensaje> mensajes = obtenerUltimosMensajes(idConversacion);
 
         return mensajes.stream()
@@ -148,7 +121,7 @@ public class ChatService {
     public List<Conversacion> listarConversacionesDeUsuario(Long idUsuario) {
         User usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        return conversacionRepository.findByUsuario1OrUsuario2(usuario, usuario);
+        return conversacionRepository.findConversacionesConUsuarios(usuario);
     }
 
     public List<ConversacionResumenDTO> listarResumenesConversacionesDeUsuario(Long idUsuario) {
@@ -156,35 +129,45 @@ public class ChatService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         List<Conversacion> conversaciones = listarConversacionesDeUsuario(idUsuario);
-        List<ConversacionResumenDTO> resumenes = new ArrayList<>();
+        if (conversaciones.isEmpty()) {
+            return new ArrayList<>();
+        }
 
+        List<Mensaje> ultimosMensajes = mensajeRepository.findUltimosMensajesPorConversaciones(conversaciones);
+        List<Object[]> conteoNoLeidos = mensajeRepository.countMensajesNoLeidosPorConversacion(conversaciones, actual);
+        Map<Long, Mensaje> ultimoMensajePorConversacion = ultimosMensajes.stream()
+                .collect(Collectors.toMap(
+                        m -> m.getConversacion().getId(),
+                        m -> m
+                ));
+
+        Map<Long, Long> noLeidosPorConversacion = conteoNoLeidos.stream()
+                .collect(Collectors.toMap(
+                        arr -> (Long) arr[0],
+                        arr -> (Long) arr[1]
+                ));
+
+        List<ConversacionResumenDTO> resumenes = new ArrayList<>();
         for (Conversacion c : conversaciones) {
+            Mensaje ultimoMensaje = ultimoMensajePorConversacion.get(c.getId());
+            if (ultimoMensaje == null) continue; // Conversación sin mensajes
+
             User otro = c.getUsuario1().getId().equals(idUsuario)
                     ? c.getUsuario2()
                     : c.getUsuario1();
 
-            List<Mensaje> mensajes = c.getMensajes();
-            if (mensajes == null || mensajes.isEmpty()) continue;
-
-            mensajes.sort(Comparator.comparing(Mensaje::getTimestampEnvio).reversed());
-            Mensaje ultimo = mensajes.get(0);
-
-            long noLeidos = mensajes.stream()
-                    .filter(m -> !m.getEmisor().getId().equals(idUsuario))
-                    .filter(m -> !m.isLeido())
-                    .count();
+            int noLeidos = noLeidosPorConversacion.getOrDefault(c.getId(), 0L).intValue();
 
             resumenes.add(new ConversacionResumenDTO(
                     c.getId(),
                     otro.getId(),
                     otro.getName(),
                     otro.getEmail(),
-                    ultimo.getContenido(),
-                    ultimo.getTimestampEnvio(),
-                    (int) noLeidos
+                    ultimoMensaje.getContenido(),
+                    ultimoMensaje.getTimestampEnvio(),
+                    noLeidos
             ));
         }
-
         resumenes.sort(Comparator.comparing(ConversacionResumenDTO::getTimestampUltimoMensaje).reversed());
         return resumenes;
     }
@@ -203,7 +186,6 @@ public class ChatService {
         for (Mensaje mensaje : mensajesNoLeidos) {
             mensaje.setLeido(true);
         }
-
         mensajeRepository.saveAll(mensajesNoLeidos);
     }
 }
