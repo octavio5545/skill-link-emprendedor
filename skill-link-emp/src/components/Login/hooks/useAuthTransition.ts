@@ -177,7 +177,7 @@ export const useAuthTransition = () => {
                     }, response.token
                 );
 
-                setApiMessage('¡Inicio de sesión exitoso! Redirigiendo...');
+                setApiMessage('¡Inicio de sesión exitoso!');
                 setIsError(false);
                 resetForm();
 

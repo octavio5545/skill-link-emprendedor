@@ -84,7 +84,6 @@ export const useWebSocketSubscriptions = ({
     );
 
     return () => {
-      console.log('Limpiando suscripción global');
       unsubscribeGlobal();
     };
   }, [currentUserId, onNewConversationDetected]);

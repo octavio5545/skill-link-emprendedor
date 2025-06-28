@@ -2,21 +2,52 @@ import type { Post } from '../../types/post';
 
 const API_BASE_URL = 'https://skill-link-emprendedor-pjof.onrender.com/api';
 
+const getAuthHeaders = (): HeadersInit => {
+  const token = sessionStorage.getItem('jwt_token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  };
+};
+
+const authenticatedRequest = async <T>(url: string, options: RequestInit = {}): Promise<T> => {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...getAuthHeaders(),
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      sessionStorage.removeItem('jwt_token');
+      sessionStorage.removeItem('user_info');
+      window.location.href = '/';
+      throw new Error('Retornado a la página de inicio debido a autenticación fallida');
+    }
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const contentType = response.headers.get('content-type');
+  const hasContent = response.status !== 204 && response.headers.get('content-length') !== '0';
+  
+  if (hasContent && contentType && contentType.includes('application/json')) {
+    return await response.json();
+  }
+  
+  return undefined as T;
+};
+
 export const fetchPosts = async (
   currentUserId: string | null, 
   page: number = 0, 
   size: number = 5
 ): Promise<Post[]> => {
   const userIdParam = currentUserId ? `currentUserId=${currentUserId}&` : '';
-  const response = await fetch(
-    `${API_BASE_URL}/posts?${userIdParam}page=${page}&size=${size}`
-  );
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  const posts = await response.json();
+  const url = `${API_BASE_URL}/posts?${userIdParam}page=${page}&size=${size}`;
+  
+  const posts = await authenticatedRequest<Post[]>(url);
   
   const sortedPosts = posts.sort((a: any, b: any) => {
     const dateA = new Date(a.createdAt).getTime();
@@ -34,19 +65,11 @@ export const sendReaction = async (
   reactionType: string,
   reactionTypeId: number
 ): Promise<void> => {
-  const response = await fetch(
-    `${API_BASE_URL}/reactions?userId=${currentUserId}&targetId=${targetId}&targetType=${targetType}&reactionTypeId=${reactionTypeId}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-  if (!response.ok && response.status !== 409) {
-    const errorText = await response.text();
-    throw new Error(`Fallo al enviar la reacción: ${response.status} ${response.statusText} - ${errorText}`);
-  }
+  const url = `${API_BASE_URL}/reactions?userId=${currentUserId}&targetId=${targetId}&targetType=${targetType}&reactionTypeId=${reactionTypeId}`;
+  
+  await authenticatedRequest<void>(url, {
+    method: 'POST'
+  });
 };
 
 export const fetchUserReaction = async (
@@ -55,11 +78,19 @@ export const fetchUserReaction = async (
   targetType: 'POST' | 'COMMENT'
 ): Promise<string | null> => {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/reactions/user-reaction?userId=${currentUserId}&targetId=${targetId}&targetType=${targetType}`
-    );
+    const url = `${API_BASE_URL}/reactions/user-reaction?userId=${currentUserId}&targetId=${targetId}&targetType=${targetType}`;
+    
+    const response = await fetch(url, {
+      headers: getAuthHeaders()
+    });
     
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        sessionStorage.removeItem('jwt_token');
+        sessionStorage.removeItem('user_info');
+        window.location.href = '/';
+        return null;
+      }
       if (response.status === 404) {
         return null;
       }
@@ -87,23 +118,12 @@ export const createComment = async (
     url.searchParams.append('parentCommentId', parentCommentId);
   }
 
-  const response = await fetch(url.toString(), {
+  return await authenticatedRequest<any>(url.toString(), {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify({
       contenido: content
     })
   });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Error al crear comentario: ${response.status} ${response.statusText} - ${errorText}`);
-  }
-
-  const result = await response.json();
-  return result;
 };
 
 export const updatePost = async (
@@ -117,78 +137,41 @@ export const updatePost = async (
     url.searchParams.append('currentUserId', currentUserId);
   }
 
-  const response = await fetch(url.toString(), {
+  return await authenticatedRequest<any>(url.toString(), {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify({
       titulo: title,
       contenido: content
     })
   });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Error al editar post: ${response.status} ${response.statusText} - ${errorText}`);
-  }
-
-  const result = await response.json();
-  return result;
 };
-
 
 export const deletePost = async (postId: string): Promise<void> => {
-
-  const response = await fetch(`${API_BASE_URL}/posts/${postId}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    }
+  const url = `${API_BASE_URL}/posts/${postId}`;
+  
+  await authenticatedRequest<void>(url, {
+    method: 'DELETE'
   });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Error al eliminar post: ${response.status} ${response.statusText} - ${errorText}`);
-  }
-
 };
-
 
 export const updateComment = async (
   commentId: string,
   content: string
 ): Promise<any> => {
-  const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
+  const url = `${API_BASE_URL}/comments/${commentId}`;
+  
+  return await authenticatedRequest<any>(url, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify({
       contenido: content
     })
   });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Error al editar comentario: ${response.status} ${response.statusText} - ${errorText}`);
-  }
-
-  const result = await response.json();
-  return result;
 };
 
 export const deleteComment = async (commentId: string): Promise<void> => {
-
-  const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    }
+  const url = `${API_BASE_URL}/comments/${commentId}`;
+  
+  await authenticatedRequest<void>(url, {
+    method: 'DELETE'
   });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Error al eliminar comentario: ${response.status} ${response.statusText} - ${errorText}`);
-  }
 };
