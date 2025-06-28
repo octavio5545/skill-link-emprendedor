@@ -1,0 +1,56 @@
+# Variables de entorno
+.env
+
+# Backend (skill-link-back)
+skill-link-back/HELP.md
+skill-link-back/target/
+skill-link-back/.mvn/wrapper/maven-wrapper.jar
+!skill-link-back/src/main/**/target/
+!skill-link-back/src/test/**/target/
+
+# Frontend (si tienes)
+skill-link-front/node_modules/
+skill-link-front/dist/
+skill-link-front/build/
+skill-link-front/.next/
+skill-link-front/.nuxt/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
