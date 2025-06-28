@@ -29,11 +29,6 @@ public class EmailService {
     @Async("emailTaskExecutor")
     public CompletableFuture<Void> enviarCorreoRecuperacion(String destinatario, String nombreUsuario, String token) {
         try {
-            System.out.println("📧 [ASYNC] Iniciando envío de correo de recuperación...");
-            System.out.println("   - Hilo: " + Thread.currentThread().getName());
-            System.out.println("   - Destinatario: " + destinatario);
-            System.out.println("   - Token: " + token);
-
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
@@ -45,17 +40,10 @@ public class EmailService {
             String contenidoHtml = templateBuilder.construirPlantillaRecuperacion(nombreUsuario, enlaceRecuperacion);
 
             helper.setText(contenidoHtml, true);
-
             mailSender.send(message);
 
-            System.out.println("✅ [ASYNC] Correo de recuperación enviado exitosamente a: " + destinatario);
-            System.out.println("🔗 Enlace generado: " + enlaceRecuperacion);
-
             return CompletableFuture.completedFuture(null);
-
         } catch (Exception e) {
-            System.err.println("❌ [ASYNC] Error al enviar correo de recuperación a: " + destinatario);
-            System.err.println("   Error: " + e.getMessage());
             e.printStackTrace();
             return CompletableFuture.failedFuture(e);
         }
