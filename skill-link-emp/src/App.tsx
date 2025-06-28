@@ -34,7 +34,7 @@ function AppContent() {
           <Route path="/about" element={<About />} />
           <Route path="/home" element={<PrivateRoute><Home name={user?.name ?? ''} rol={user?.role ?? ''} currentUserId={currentUserId} /></PrivateRoute>} />
           <Route path="/add-post" element={<PrivateRoute><AddPost /></PrivateRoute>} />
-          <Route path="/reset-password" element={<PrivateRoute><ResetPasswordPage /></PrivateRoute>} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/dashboard" element={<PrivateRoute><EntrepreneurDashboard /></PrivateRoute>} />
           <Route path="/mentor-dashboard" element={<PrivateRoute><MentorDashboard /></PrivateRoute>} />
           <Route path="/messages" element={<PrivateRoute><ChatPage /></PrivateRoute>} />
