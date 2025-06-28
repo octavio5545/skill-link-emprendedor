@@ -14,7 +14,7 @@ const Footer = () => {
                     <p>Conectando talento con oportunidades.</p>
                 </div>
                 <div className="footer-links">
-                    <Link to="/">Inicio</Link>
+                    <Link to="/home">Inicio</Link>
                     <Link to="/about">Sobre Nosotros</Link>
                 </div>
             </div>

@@ -114,13 +114,6 @@ const PostHeader: React.FC<PostHeaderProps> = ({
     comparison: `${String(currentUserId)} === ${String(author.id)}`
   });
 
-  console.log('PostHeader - createdAt:', {
-    value: createdAt,
-    type: typeof createdAt,
-    isDate: createdAt instanceof Date,
-    isValid: createdAt instanceof Date ? !isNaN(createdAt.getTime()) : 'N/A'
-  });
-
   return (
     <>
       <div className="pb-4">

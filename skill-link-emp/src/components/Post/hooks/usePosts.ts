@@ -173,7 +173,6 @@ export const usePosts = ({ currentUserId }: UsePostsOptions): UsePostsReturn => 
           const newPosts = normalizedPosts.filter(p => !existingIds.has(p.id));
           return [...prevPosts, ...newPosts];
         });
-        console.log(`✅ Agregados ${normalizedPosts.length} posts más`);
       } else {
         setPosts(normalizedPosts);
         setPage(0); // Reset page

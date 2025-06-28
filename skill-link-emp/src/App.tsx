@@ -19,7 +19,6 @@ function AppContent() {
   const { user } = useAuth();
   const [selectedTag] = useState<string>('all');
   const location = useLocation();
-
   const currentUserId = user?.userId || null;
 
   const isLoginPage = location.pathname === '/';
@@ -33,7 +32,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/about" element={<About />} />
-          <Route path="/home" element={<PrivateRoute><Home selectedTag={selectedTag} currentUserId={currentUserId} /></PrivateRoute>} />
+          <Route path="/home" element={<PrivateRoute><Home name={user?.name ?? ''} rol={user?.role ?? ''} currentUserId={currentUserId} /></PrivateRoute>} />
           <Route path="/add-post" element={<PrivateRoute><AddPost /></PrivateRoute>} />
           <Route path="/reset-password" element={<PrivateRoute><ResetPasswordPage /></PrivateRoute>} />
           <Route path="/dashboard" element={<PrivateRoute><EntrepreneurDashboard /></PrivateRoute>} />

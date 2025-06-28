@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Lightbulb, Home, BarChart3, MessageCircle, Bell, Menu, X } from 'lucide-react';
 import { getUserAvatar } from '../Post/utils/avatarUtils';
 import { NotificationDropdown } from '../Chat/components/notifications/NotificationDropdown';
@@ -33,44 +33,17 @@ const NavBar: React.FC<Props> = ({
     const menuRef = useRef<HTMLDivElement>(null);
     const mobileMenuRef = useRef<HTMLDivElement>(null);
     const location = useLocation();
+    const navigate = useNavigate();
 
-    const userAvatar = user?.userId ? getUserAvatar(user.userId) : userIcon;
-    
     const currentUserId = user?.userId ? Number(user.userId) : 1;
     const chatData = useChat(currentUserId);
-
+    
     const {
         notifications,
         unreadCount,
         markNotificationAsRead,
         clearAllNotifications
     } = useNotifications(chatData.conversations, chatData.activeConversationId);
-    
-    const handleToggle = () => {
-        setIsMenuOpen(prev => !prev);
-    };
-
-    const handleMobileMenuToggle = () => {
-        setIsMobileMenuOpen(prev => !prev);
-    };
-
-    const handleNotificationClick = (conversationId: number) => {
-        if (onSectionChange) {
-            onSectionChange('messages');
-        }
-        if (onSelectConversation && conversationId > 0) {
-            setTimeout(() => {
-                onSelectConversation(conversationId);
-            }, 100);
-        }
-    };
-
-    const handleMobileNotificationClick = () => {
-        // Para móvil, simplemente cambia a la sección de mensajes
-        if (onSectionChange) {
-            onSectionChange('messages');
-        }
-    };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -91,7 +64,6 @@ const NavBar: React.FC<Props> = ({
         setIsMobileMenuOpen(false);
     }, [location]);
 
-    // Cerrar menú móvil cuando se cambie a desktop
     useEffect(() => {
         const handleResize = () => {
             if (window.innerWidth >= 768) {
@@ -102,6 +74,40 @@ const NavBar: React.FC<Props> = ({
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    const userAvatar = user?.userId ? getUserAvatar(user.userId) : userIcon;
+    
+    const handleToggle = () => {
+        setIsMenuOpen(prev => !prev);
+    };
+
+    const handleMobileMenuToggle = () => {
+        setIsMobileMenuOpen(prev => !prev);
+    };
+
+    const handleNotificationClick = (conversationId: number) => {
+        if (conversationId > 0) {
+            navigate(`/messages?conversation=${conversationId}`);
+        } else {
+            navigate('/messages');
+        }
+        
+        if (onSectionChange) {
+            onSectionChange('messages');
+        }
+        if (onSelectConversation && conversationId > 0) {
+            setTimeout(() => {
+                onSelectConversation(conversationId);
+            }, 100);
+        }
+    };
+
+    const handleMobileNotificationClick = () => {
+        navigate('/messages');
+        if (onSectionChange) {
+            onSectionChange('messages');
+        }
+    };
 
     return (
         <>
@@ -182,7 +188,7 @@ const NavBar: React.FC<Props> = ({
                                 {isMenuOpen && (
                                     <ul className="dropdown-menu">
                                         <li>
-                                            <Link to="/#">
+                                            <Link to="#">
                                                 Perfil
                                             </Link>
                                         </li>
@@ -267,7 +273,7 @@ const NavBar: React.FC<Props> = ({
                         {/* Footer del menú móvil */}
                         <div className="mobile-menu-footer">
                             <Link 
-                                to="/#" 
+                                to="#" 
                                 className="mobile-footer-link"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >

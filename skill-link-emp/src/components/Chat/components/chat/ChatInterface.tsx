@@ -7,10 +7,14 @@ import type { ChatUser } from '../../types/api';
 
 interface ChatInterfaceProps {
   chatData: any;
+  initialConversationId?: number | null;
 }
 
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatData }) => {
-  const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
+export const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
+  chatData, 
+  initialConversationId = null 
+}) => {
+  const [activeConversationId, setActiveConversationId] = useState<number | null>(initialConversationId);
   const [showChat, setShowChat] = useState<boolean>(false);
   const [loadingMessages, setLoadingMessages] = useState<{ [conversationId: number]: boolean }>({});
 
@@ -36,6 +40,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatData }) => {
     activeConversationId: hookActiveConversationId
   } = chatData;
 
+  // Efecto para manejar conversación inicial desde props
+  useEffect(() => {
+    if (initialConversationId && initialConversationId > 0 && conversations.length > 0) {
+      const conversationExists = conversations.find(c => c.id === initialConversationId);
+      if (conversationExists) {
+        console.log('🎯 Abriendo conversación inicial:', initialConversationId);
+        handleSelectConversation(initialConversationId);
+      }
+    }
+  }, [initialConversationId, conversations.length]);
+
+  // Efecto para sincronizar con el hook
   useEffect(() => {
     if (hookActiveConversationId && hookActiveConversationId !== activeConversationId) {
       handleSelectConversation(hookActiveConversationId);
@@ -61,10 +77,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatData }) => {
       console.error('ID de conversación inválido:', conversationId);
       return;
     }
+
+    console.log('📱 Seleccionando conversación:', conversationId);
+    
+    // Actualizar el estado inmediatamente
     setActiveConversationId(conversationId);
     setActiveConversation(conversationId);
     setShowChat(true);
     
+    // Cargar mensajes si no existen
     if (!messages[conversationId]) {
       setLoadingMessages(prev => ({ ...prev, [conversationId]: true }));
       
@@ -75,6 +96,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatData }) => {
       }
     }
     
+    // Marcar como leído después de cargar los mensajes
     await markAsRead(conversationId);
   };
 

@@ -11,11 +11,12 @@ import { usePosts } from './Post/hooks/usePosts';
 import { useInfiniteScroll } from './Post/hooks/useInfiniteScroll';
 
 interface HomeProps {
-  selectedTag: string;
+  name: string | null;
+  rol : string | null;
   currentUserId: string | null;
 }
 
-export const Home = ({ selectedTag, currentUserId }: HomeProps) => {
+export const Home = ({ name, rol, currentUserId }: HomeProps) => {
   const { 
       posts, 
       loading, 
@@ -98,7 +99,7 @@ export const Home = ({ selectedTag, currentUserId }: HomeProps) => {
           <aside className="lg:col-span-1">
             <div className=" space-y-6">
               {/* Stats Card */}
-              <ProfileCard />
+              <ProfileCard name={name} rol={rol} currentUserId={currentUserId}/>
 
               {/* Filters */}
               {showFilters && (
