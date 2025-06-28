@@ -23,10 +23,11 @@ function AppContent() {
 
   const isLoginPage = location.pathname === '/';
   const isChatPage = location.pathname === '/messages';
+  const isResetPasswordPage = location.pathname === '/reset-password';
   
   return (
     <div className='app-container'>
-      {!isLoginPage && <NavBarWrapper />}
+      {!isLoginPage && !isResetPasswordPage && <NavBarWrapper />}
       
       <main className={`app-main-content ${isChatPage ? 'chat-page' : ''}`}>
         <Routes>
@@ -41,7 +42,7 @@ function AppContent() {
         </Routes>
       </main>
       
-      {!isLoginPage && !isChatPage && <Footer />}
+      {!isLoginPage && !isChatPage && !isResetPasswordPage && <Footer />}
     </div>
   );
 }
